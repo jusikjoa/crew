@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/jusikjoa/crew/issues"
   },
-  "homepage": "https://github.com/jusikjoa/crew#readme"
+  "homepage": "https://github.com/jusikjoa/crew#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
 }
