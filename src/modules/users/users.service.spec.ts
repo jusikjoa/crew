@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/userEntity';
+import { UserResponseDto } from './dto/user-response.dto';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -26,6 +27,16 @@ describe('UsersService', () => {
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
+  };
+
+  const mockUserResponse: UserResponseDto = {
+    id: '1',
+    email: 'test@example.com',
+    username: 'testuser',
+    displayName: 'Test User',
+    isActive: true,
+    createdAt: mockUser.createdAt,
+    updatedAt: mockUser.updatedAt,
   };
 
   beforeEach(async () => {
@@ -67,7 +78,7 @@ describe('UsersService', () => {
         createUserDto.displayName,
       );
 
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockUserResponse);
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { email: createUserDto.email } });
       expect(mockRepository.create).toHaveBeenCalled();
       expect(mockRepository.save).toHaveBeenCalled();
@@ -124,11 +135,12 @@ describe('UsersService', () => {
   describe('findAll', () => {
     it('모든 사용자를 조회해야 함', async () => {
       const users = [mockUser];
+      const expectedUsers = [mockUserResponse];
       mockRepository.find.mockResolvedValue(users);
 
       const result = await service.findAll();
 
-      expect(result).toEqual(users);
+      expect(result).toEqual(expectedUsers);
       expect(mockRepository.find).toHaveBeenCalled();
     });
   });
@@ -137,25 +149,48 @@ describe('UsersService', () => {
     it('사용자 프로필을 업데이트해야 함', async () => {
       const updateData = { displayName: 'Updated Name' };
       const updatedUser = { ...mockUser, ...updateData };
+      const expectedResponse = { ...mockUserResponse, ...updateData };
 
       mockRepository.findOne.mockResolvedValue(mockUser);
       mockRepository.save.mockResolvedValue(updatedUser);
 
       const result = await service.update('1', updateData);
 
+      expect(result).toEqual(expectedResponse);
       expect(result.displayName).toBe('Updated Name');
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
     it('이메일 변경 시 중복 체크를 해야 함', async () => {
       const updateData = { email: 'newemail@example.com' };
+      const originalUser = {
+        id: '1',
+        email: 'test@example.com',
+        password: 'hashedPassword',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const updatedUser = { ...originalUser, ...updateData };
+      const expectedResponse = {
+        id: '1',
+        email: 'newemail@example.com',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: true,
+        createdAt: originalUser.createdAt,
+        updatedAt: originalUser.updatedAt,
+      };
       
-      mockRepository.findOne.mockResolvedValueOnce(mockUser); // findOne 호출
+      mockRepository.findOne.mockResolvedValueOnce(originalUser); // findOne 호출
       mockRepository.findOne.mockResolvedValueOnce(null); // findByEmail 호출 (중복 없음)
-      mockRepository.save.mockResolvedValue({ ...mockUser, ...updateData });
+      mockRepository.save.mockResolvedValue(updatedUser);
 
       const result = await service.update('1', updateData);
 
+      expect(result).toEqual(expectedResponse);
       expect(result.email).toBe('newemail@example.com');
     });
 
@@ -184,12 +219,33 @@ describe('UsersService', () => {
 
   describe('activate', () => {
     it('사용자를 활성화해야 함', async () => {
-      const inactiveUser = { ...mockUser, isActive: false };
+      const inactiveUser = {
+        id: '1',
+        email: 'test@example.com',
+        password: 'hashedPassword',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const activatedUser = { ...inactiveUser, isActive: true };
+      const expectedResponse = {
+        id: '1',
+        email: 'test@example.com',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: true,
+        createdAt: inactiveUser.createdAt,
+        updatedAt: inactiveUser.updatedAt,
+      };
+      
       mockRepository.findOne.mockResolvedValue(inactiveUser);
-      mockRepository.save.mockResolvedValue({ ...inactiveUser, isActive: true });
+      mockRepository.save.mockResolvedValue(activatedUser);
 
       const result = await service.activate('1');
 
+      expect(result).toEqual(expectedResponse);
       expect(result.isActive).toBe(true);
       expect(mockRepository.save).toHaveBeenCalled();
     });
@@ -197,11 +253,33 @@ describe('UsersService', () => {
 
   describe('deactivate', () => {
     it('사용자를 비활성화해야 함', async () => {
-      mockRepository.findOne.mockResolvedValue(mockUser);
-      mockRepository.save.mockResolvedValue({ ...mockUser, isActive: false });
+      const originalUser = {
+        id: '1',
+        email: 'test@example.com',
+        password: 'hashedPassword',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const deactivatedUser = { ...originalUser, isActive: false };
+      const expectedResponse = {
+        id: '1',
+        email: 'test@example.com',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: false,
+        createdAt: originalUser.createdAt,
+        updatedAt: originalUser.updatedAt,
+      };
+      
+      mockRepository.findOne.mockResolvedValue(originalUser);
+      mockRepository.save.mockResolvedValue(deactivatedUser);
 
       const result = await service.deactivate('1');
 
+      expect(result).toEqual(expectedResponse);
       expect(result.isActive).toBe(false);
       expect(mockRepository.save).toHaveBeenCalled();
     });
