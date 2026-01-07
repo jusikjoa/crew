@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/userEntity';
+import { UserResponseDto } from './dto/user-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -10,8 +11,14 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
+  // 비밀번호를 제외한 사용자 정보 반환 헬퍼 메서드
+  private excludePassword(user: User): UserResponseDto {
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword as UserResponseDto;
+  }
+
   // 사용자 생성
-  async create(email: string, password: string, username: string, displayName?: string): Promise<User> {
+  async create(email: string, password: string, username: string, displayName?: string): Promise<UserResponseDto> {
     // 이메일 중복 확인
     const existingUser = await this.usersRepository.findOne({ where: { email } });
     if (existingUser) {
@@ -26,16 +33,23 @@ export class UsersService {
       isActive: true,
     });
 
-    return await this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+    return this.excludePassword(savedUser);
   }
 
-  // ID로 사용자 조회
+  // ID로 사용자 조회 (내부용 - 비밀번호 포함)
   async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
     return user;
+  }
+
+  // ID로 사용자 조회 (응답용 - 비밀번호 제외)
+  async findOneForResponse(id: string): Promise<UserResponseDto> {
+    const user = await this.findOne(id);
+    return this.excludePassword(user);
   }
 
   // 이메일로 사용자 조회 (로그인 등에서 사용)
@@ -49,12 +63,13 @@ export class UsersService {
   }
 
   // 모든 사용자 조회
-  async findAll(): Promise<User[]> {
-    return await this.usersRepository.find();
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await this.usersRepository.find();
+    return users.map(user => this.excludePassword(user));
   }
 
   // 사용자 프로필 업데이트
-  async update(id: string, updateData: Partial<User>): Promise<User> {
+  async update(id: string, updateData: Partial<User>): Promise<UserResponseDto> {
     const user = await this.findOne(id);
     
     // 이메일 변경 시 중복 확인
@@ -66,7 +81,8 @@ export class UsersService {
     }
 
     Object.assign(user, updateData);
-    return await this.usersRepository.save(user);
+    const updatedUser = await this.usersRepository.save(user);
+    return this.excludePassword(updatedUser);
   }
 
   // 비밀번호 업데이트
@@ -77,17 +93,19 @@ export class UsersService {
   }
 
   // 사용자 비활성화
-  async deactivate(id: string): Promise<User> {
+  async deactivate(id: string): Promise<UserResponseDto> {
     const user = await this.findOne(id);
     user.isActive = false;
-    return await this.usersRepository.save(user);
+    const updatedUser = await this.usersRepository.save(user);
+    return this.excludePassword(updatedUser);
   }
 
   // 사용자 활성화
-  async activate(id: string): Promise<User> {
+  async activate(id: string): Promise<UserResponseDto> {
     const user = await this.findOne(id);
     user.isActive = true;
-    return await this.usersRepository.save(user);
+    const updatedUser = await this.usersRepository.save(user);
+    return this.excludePassword(updatedUser);
   }
 
   // 사용자 삭제

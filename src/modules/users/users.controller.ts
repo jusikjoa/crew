@@ -27,7 +27,7 @@ import {
     // 특정 사용자 조회
     @Get(':id')
     async findOne(@Param('id') id: string) {
-      return await this.usersService.findOne(id);
+      return await this.usersService.findOneForResponse(id);
     }
   
     // 사용자 생성 (일반적으로는 AuthService에서 처리)
