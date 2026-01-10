@@ -302,6 +302,164 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Channels",
+			"item": [
+				{
+					"name": "모든 채널 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/channels",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"channels"
+							]
+						},
+						"description": "모든 채널 목록을 조회합니다."
+					}
+				},
+				{
+					"name": "특정 채널 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/channels/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"channels",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "채널 ID"
+								}
+							]
+						},
+						"description": "특정 채널의 정보를 조회합니다."
+					}
+				},
+				{
+					"name": "채널 생성",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"description": "로그인 후 받은 accessToken을 여기에 입력하세요"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"general\",\n  \"description\": \"일반 채널\",\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/channels",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"channels"
+							]
+						},
+						"description": "새로운 채널을 생성합니다. 인증이 필요하며, 토큰에서 사용자 ID를 가져와 채널의 createdBy에 저장합니다."
+					}
+				},
+				{
+					"name": "채널 업데이트",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"description": "로그인 후 받은 accessToken을 여기에 입력하세요. 채널 생성자만 업데이트 가능합니다."
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"updated-channel\",\n  \"description\": \"업데이트된 채널 설명\",\n  \"isPublic\": false\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/channels/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"channels",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "채널 ID"
+								}
+							]
+						},
+						"description": "채널 정보를 업데이트합니다. 인증이 필요하며, 채널의 createdBy와 토큰의 사용자 ID가 일치하는 경우에만 업데이트 가능합니다."
+					}
+				},
+				{
+					"name": "채널 삭제",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"description": "로그인 후 받은 accessToken을 여기에 입력하세요. 채널 생성자만 삭제 가능합니다."
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/channels/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"channels",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "채널 ID"
+								}
+							]
+						},
+						"description": "채널을 삭제합니다. 인증이 필요하며, 채널의 createdBy와 토큰의 사용자 ID가 일치하는 경우에만 삭제 가능합니다."
+					}
+				}
+			]
 		}
 	]
 }
