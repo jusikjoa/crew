@@ -1,10 +1,44 @@
 {
 	"info": {
-		"name": "Users API",
-		"description": "Users 컨트롤러 테스트용 Postman 컬렉션",
+		"name": "Crew API",
+		"description": "Crew API 테스트용 Postman 컬렉션",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "회원가입",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123\",\n  \"username\": \"testuser\",\n  \"displayName\": \"Test User\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/auth/signup",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"auth",
+								"signup"
+							]
+						},
+						"description": "새로운 사용자로 회원가입합니다. 비밀번호는 대문자, 소문자, 숫자를 각각 하나 이상 포함해야 합니다."
+					}
+				}
+			]
+		},
 		{
 			"name": "Users",
 			"item": [
@@ -242,4 +276,5 @@
 		}
 	]
 }
+
 
