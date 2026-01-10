@@ -113,6 +113,24 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findOneForResponse', () => {
+    it('ID로 사용자를 조회하고 비밀번호를 제외한 정보를 반환해야 함', async () => {
+      mockRepository.findOne.mockResolvedValue(mockUser);
+
+      const result = await service.findOneForResponse('1');
+
+      expect(result).toEqual(mockUserResponse);
+      expect(result).not.toHaveProperty('password');
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: '1' } });
+    });
+
+    it('존재하지 않는 사용자 조회 시 NotFoundException을 던져야 함', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.findOneForResponse('999')).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('findByEmail', () => {
     it('이메일로 사용자를 조회해야 함', async () => {
       mockRepository.findOne.mockResolvedValue(mockUser);
@@ -127,6 +145,25 @@ describe('UsersService', () => {
       mockRepository.findOne.mockResolvedValue(null);
 
       const result = await service.findByEmail('notfound@example.com');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findByUsername', () => {
+    it('사용자명으로 사용자를 조회해야 함', async () => {
+      mockRepository.findOne.mockResolvedValue(mockUser);
+
+      const result = await service.findByUsername('testuser');
+
+      expect(result).toEqual(mockUser);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { username: 'testuser' } });
+    });
+
+    it('존재하지 않는 사용자명 조회 시 null을 반환해야 함', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      const result = await service.findByUsername('notfounduser');
 
       expect(result).toBeNull();
     });
