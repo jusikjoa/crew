@@ -49,6 +49,15 @@ export class ChannelsController {
   }
 
   /**
+   * 내가 참여한 채널 목록 조회
+   */
+  @Get('my-channels')
+  @UseGuards(JwtAuthGuard)
+  async findMyChannels(@CurrentUser() user: CurrentUserPayload): Promise<ChannelResponseDto[]> {
+    return await this.channelsService.findUserChannels(user.userId);
+  }
+
+  /**
    * 특정 채널 조회
    */
   @Get(':id')
@@ -80,6 +89,32 @@ export class ChannelsController {
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<void> {
     await this.channelsService.remove(id, user.userId);
+  }
+
+  /**
+   * 채널 참여
+   */
+  @Post(':id/join')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async joinChannel(
+    @Param('id') channelId: string,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<ChannelResponseDto> {
+    return await this.channelsService.joinChannel(channelId, user.userId);
+  }
+
+  /**
+   * 채널 탈퇴
+   */
+  @Post(':id/leave')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async leaveChannel(
+    @Param('id') channelId: string,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<void> {
+    await this.channelsService.leaveChannel(channelId, user.userId);
   }
 }
 

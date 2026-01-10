@@ -28,14 +28,17 @@ describe('AuthService', () => {
     sign: jest.fn(),
   };
 
+  // 날짜를 고정하여 테스트 간 일관성 유지
+  const fixedDate = new Date('2026-01-10T10:46:10.610Z');
+
   const mockUserResponse: UserResponseDto = {
     id: '1',
     email: 'test@example.com',
     username: 'testuser',
     displayName: 'Test User',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
   };
 
   const mockUser: User = {
@@ -45,8 +48,8 @@ describe('AuthService', () => {
     username: 'testuser',
     displayName: 'Test User',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
   };
 
   beforeEach(async () => {

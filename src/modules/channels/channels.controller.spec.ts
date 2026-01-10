@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ChannelsController } from './channels.controller';
 import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
@@ -16,6 +16,9 @@ describe('ChannelsController', () => {
     findOne: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
+    findUserChannels: jest.fn(),
+    joinChannel: jest.fn(),
+    leaveChannel: jest.fn(),
   };
 
   const mockChannelResponse: ChannelResponseDto = {
@@ -284,6 +287,141 @@ describe('ChannelsController', () => {
       );
 
       expect(service.remove).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+    });
+  });
+
+  describe('findMyChannels', () => {
+    it('내가 참여한 채널 목록을 조회해야 함', async () => {
+      const channels = [mockChannelResponse];
+      mockChannelsService.findUserChannels.mockResolvedValue(channels);
+
+      const result = await controller.findMyChannels(mockCurrentUser);
+
+      expect(result).toEqual(channels);
+      expect(service.findUserChannels).toHaveBeenCalledWith(mockCurrentUser.userId);
+      expect(service.findUserChannels).toHaveBeenCalledTimes(1);
+    });
+
+    it('참여한 채널이 없을 때 빈 배열을 반환해야 함', async () => {
+      mockChannelsService.findUserChannels.mockResolvedValue([]);
+
+      const result = await controller.findMyChannels(mockCurrentUser);
+
+      expect(result).toEqual([]);
+      expect(service.findUserChannels).toHaveBeenCalledWith(mockCurrentUser.userId);
+    });
+
+    it('여러 채널에 참여한 경우 모두 반환해야 함', async () => {
+      const secondChannel: ChannelResponseDto = {
+        id: '2',
+        name: 'random',
+        description: '랜덤 채널',
+        isPublic: true,
+        createdBy: 'user-2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const channels = [mockChannelResponse, secondChannel];
+      mockChannelsService.findUserChannels.mockResolvedValue(channels);
+
+      const result = await controller.findMyChannels(mockCurrentUser);
+
+      expect(result).toHaveLength(2);
+      expect(result).toEqual(channels);
+      expect(service.findUserChannels).toHaveBeenCalledWith(mockCurrentUser.userId);
+    });
+
+    it('존재하지 않는 사용자 조회 시 NotFoundException을 던져야 함', async () => {
+      mockChannelsService.findUserChannels.mockRejectedValue(
+        new NotFoundException('사용자를 찾을 수 없습니다.'),
+      );
+
+      await expect(controller.findMyChannels(mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.findMyChannels(mockCurrentUser)).rejects.toThrow('사용자를 찾을 수 없습니다.');
+
+      expect(service.findUserChannels).toHaveBeenCalledWith(mockCurrentUser.userId);
+    });
+  });
+
+  describe('joinChannel', () => {
+    const channelId = '1';
+
+    it('채널에 성공적으로 참여해야 함', async () => {
+      mockChannelsService.joinChannel.mockResolvedValue(mockChannelResponse);
+
+      const result = await controller.joinChannel(channelId, mockCurrentUser);
+
+      expect(result).toEqual(mockChannelResponse);
+      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+      expect(service.joinChannel).toHaveBeenCalledTimes(1);
+    });
+
+    it('존재하지 않는 채널 참여 시 NotFoundException을 던져야 함', async () => {
+      mockChannelsService.joinChannel.mockRejectedValue(
+        new NotFoundException('채널을 찾을 수 없습니다.'),
+      );
+
+      await expect(controller.joinChannel('999', mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.joinChannel('999', mockCurrentUser)).rejects.toThrow('채널을 찾을 수 없습니다.');
+
+      expect(service.joinChannel).toHaveBeenCalledWith('999', mockCurrentUser.userId);
+    });
+
+    it('이미 참여 중인 채널에 참여 시 ConflictException을 던져야 함', async () => {
+      mockChannelsService.joinChannel.mockRejectedValue(
+        new ConflictException('이미 참여 중인 채널입니다.'),
+      );
+
+      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow(ConflictException);
+      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow('이미 참여 중인 채널입니다.');
+
+      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+    });
+
+    it('존재하지 않는 사용자가 참여 시 NotFoundException을 던져야 함', async () => {
+      mockChannelsService.joinChannel.mockRejectedValue(
+        new NotFoundException('사용자를 찾을 수 없습니다.'),
+      );
+
+      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow('사용자를 찾을 수 없습니다.');
+
+      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+    });
+  });
+
+  describe('leaveChannel', () => {
+    const channelId = '1';
+
+    it('채널에서 성공적으로 탈퇴해야 함', async () => {
+      mockChannelsService.leaveChannel.mockResolvedValue(undefined);
+
+      await controller.leaveChannel(channelId, mockCurrentUser);
+
+      expect(service.leaveChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+      expect(service.leaveChannel).toHaveBeenCalledTimes(1);
+    });
+
+    it('존재하지 않는 채널 탈퇴 시 NotFoundException을 던져야 함', async () => {
+      mockChannelsService.leaveChannel.mockRejectedValue(
+        new NotFoundException('채널을 찾을 수 없습니다.'),
+      );
+
+      await expect(controller.leaveChannel('999', mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.leaveChannel('999', mockCurrentUser)).rejects.toThrow('채널을 찾을 수 없습니다.');
+
+      expect(service.leaveChannel).toHaveBeenCalledWith('999', mockCurrentUser.userId);
+    });
+
+    it('참여하지 않은 채널 탈퇴 시 BadRequestException을 던져야 함', async () => {
+      mockChannelsService.leaveChannel.mockRejectedValue(
+        new BadRequestException('참여하지 않은 채널입니다.'),
+      );
+
+      await expect(controller.leaveChannel(channelId, mockCurrentUser)).rejects.toThrow(BadRequestException);
+      await expect(controller.leaveChannel(channelId, mockCurrentUser)).rejects.toThrow('참여하지 않은 채널입니다.');
+
+      expect(service.leaveChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
     });
   });
 });

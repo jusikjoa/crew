@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  ManyToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/userEntity';
 
@@ -29,6 +30,9 @@ export class Channel {
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'createdBy' })
   creator?: User;
+
+  @ManyToMany(() => User, (user) => user.channels)
+  members?: User[];
 
   @CreateDateColumn()
   createdAt: Date;

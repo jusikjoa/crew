@@ -4,7 +4,10 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
+    ManyToMany,
+    JoinTable,
   } from 'typeorm';
+  import { Channel } from '../../channels/entities/channel.entity';
   
   @Entity('users')
   export class User {
@@ -25,6 +28,14 @@ import {
   
     @Column({ default: true })
     isActive: boolean;
+  
+    @ManyToMany(() => Channel, (channel) => channel.members)
+    @JoinTable({
+      name: 'user_channels',
+      joinColumn: { name: 'userId', referencedColumnName: 'id' },
+      inverseJoinColumn: { name: 'channelId', referencedColumnName: 'id' },
+    })
+    channels?: Channel[];
   
     @CreateDateColumn()
     createdAt: Date;
