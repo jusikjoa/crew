@@ -14,6 +14,7 @@ import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -63,6 +64,14 @@ export class ChannelsController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ChannelResponseDto> {
     return await this.channelsService.findOne(id);
+  }
+
+  /**
+   * 채널의 참가자 목록 조회
+   */
+  @Get(':id/members')
+  async findChannelMembers(@Param('id') id: string): Promise<UserResponseDto[]> {
+    return await this.channelsService.findChannelMembers(id);
   }
 
   /**

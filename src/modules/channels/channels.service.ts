@@ -6,6 +6,7 @@ import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
 import { User } from '../users/entities/userEntity';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 
 @Injectable()
 export class ChannelsService {
@@ -199,6 +200,34 @@ export class ChannelsService {
     }
 
     return user.channels.map(channel => this.toResponseDto(channel));
+  }
+
+  /**
+   * 채널의 참가자 목록 조회
+   */
+  async findChannelMembers(channelId: string): Promise<UserResponseDto[]> {
+    const channel = await this.channelsRepository.findOne({
+      where: { id: channelId },
+      relations: ['members'],
+    });
+
+    if (!channel) {
+      throw new NotFoundException('채널을 찾을 수 없습니다.');
+    }
+
+    if (!channel.members || channel.members.length === 0) {
+      return [];
+    }
+
+    return channel.members.map(member => this.excludePassword(member));
+  }
+
+  /**
+   * 비밀번호를 제외한 사용자 정보 반환 헬퍼 메서드
+   */
+  private excludePassword(user: User): UserResponseDto {
+    const { password, channels, ...userWithoutPassword } = user;
+    return userWithoutPassword as UserResponseDto;
   }
 
   /**

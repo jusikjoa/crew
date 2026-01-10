@@ -5,6 +5,7 @@ import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 
 describe('ChannelsController', () => {
   let controller: ChannelsController;
@@ -19,6 +20,7 @@ describe('ChannelsController', () => {
     findUserChannels: jest.fn(),
     joinChannel: jest.fn(),
     leaveChannel: jest.fn(),
+    findChannelMembers: jest.fn(),
   };
 
   const mockChannelResponse: ChannelResponseDto = {
@@ -422,6 +424,82 @@ describe('ChannelsController', () => {
       await expect(controller.leaveChannel(channelId, mockCurrentUser)).rejects.toThrow('참여하지 않은 채널입니다.');
 
       expect(service.leaveChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+    });
+  });
+
+  describe('findChannelMembers', () => {
+    const channelId = '1';
+
+    it('채널의 참가자 목록을 조회해야 함', async () => {
+      const mockMember1: UserResponseDto = {
+        id: 'user-1',
+        email: 'test1@example.com',
+        username: 'testuser1',
+        displayName: 'Test User 1',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockMember2: UserResponseDto = {
+        id: 'user-2',
+        email: 'test2@example.com',
+        username: 'testuser2',
+        displayName: 'Test User 2',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const members = [mockMember1, mockMember2];
+      mockChannelsService.findChannelMembers.mockResolvedValue(members);
+
+      const result = await controller.findChannelMembers(channelId);
+
+      expect(result).toEqual(members);
+      expect(result).toHaveLength(2);
+      expect(service.findChannelMembers).toHaveBeenCalledWith(channelId);
+      expect(service.findChannelMembers).toHaveBeenCalledTimes(1);
+    });
+
+    it('참가자가 없을 때 빈 배열을 반환해야 함', async () => {
+      mockChannelsService.findChannelMembers.mockResolvedValue([]);
+
+      const result = await controller.findChannelMembers(channelId);
+
+      expect(result).toEqual([]);
+      expect(service.findChannelMembers).toHaveBeenCalledWith(channelId);
+    });
+
+    it('존재하지 않는 채널 조회 시 NotFoundException을 던져야 함', async () => {
+      mockChannelsService.findChannelMembers.mockRejectedValue(
+        new NotFoundException('채널을 찾을 수 없습니다.'),
+      );
+
+      await expect(controller.findChannelMembers('999')).rejects.toThrow(NotFoundException);
+      await expect(controller.findChannelMembers('999')).rejects.toThrow('채널을 찾을 수 없습니다.');
+
+      expect(service.findChannelMembers).toHaveBeenCalledWith('999');
+    });
+
+    it('반환된 멤버 정보에 password가 포함되지 않아야 함', async () => {
+      const mockMember: UserResponseDto = {
+        id: 'user-1',
+        email: 'test@example.com',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockChannelsService.findChannelMembers.mockResolvedValue([mockMember]);
+
+      const result = await controller.findChannelMembers(channelId);
+
+      expect(result[0]).not.toHaveProperty('password');
+      expect(result[0].id).toBe('user-1');
+      expect(result[0].email).toBe('test@example.com');
     });
   });
 });

@@ -8,6 +8,7 @@ import { User } from '../users/entities/userEntity';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 
 describe('ChannelsService', () => {
   let service: ChannelsService;
@@ -743,6 +744,131 @@ describe('ChannelsService', () => {
           members: [mockUser2], // user-2만 남아있어야 함
         }),
       );
+    });
+  });
+
+  describe('findChannelMembers', () => {
+    it('채널의 참가자 목록을 조회해야 함', async () => {
+      const mockUser: User = {
+        id: 'user-1',
+        email: 'test@example.com',
+        password: 'hashed',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: true,
+        channels: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const expectedUserResponse: UserResponseDto = {
+        id: 'user-1',
+        email: 'test@example.com',
+        username: 'testuser',
+        displayName: 'Test User',
+        isActive: true,
+        createdAt: mockUser.createdAt,
+        updatedAt: mockUser.updatedAt,
+      };
+
+      const channelWithMember = { ...mockChannel, members: [mockUser] };
+      mockRepository.findOne.mockResolvedValue(channelWithMember);
+
+      const result = await service.findChannelMembers('1');
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(expectedUserResponse);
+      expect(result[0]).not.toHaveProperty('password'); // 비밀번호가 제외되어야 함
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+        relations: ['members'],
+      });
+    });
+
+    it('참가자가 없을 때 빈 배열을 반환해야 함', async () => {
+      const channelWithoutMembers = { ...mockChannel, members: [] };
+      mockRepository.findOne.mockResolvedValue(channelWithoutMembers);
+
+      const result = await service.findChannelMembers('1');
+
+      expect(result).toEqual([]);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+        relations: ['members'],
+      });
+    });
+
+    it('존재하지 않는 채널 조회 시 NotFoundException을 던져야 함', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.findChannelMembers('999')).rejects.toThrow(NotFoundException);
+      await expect(service.findChannelMembers('999')).rejects.toThrow('채널을 찾을 수 없습니다.');
+    });
+
+    it('여러 참가자가 있는 경우 모두 반환해야 함', async () => {
+      const mockUser1: User = {
+        id: 'user-1',
+        email: 'test1@example.com',
+        password: 'hashed1',
+        username: 'testuser1',
+        displayName: 'Test User 1',
+        isActive: true,
+        channels: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockUser2: User = {
+        id: 'user-2',
+        email: 'test2@example.com',
+        password: 'hashed2',
+        username: 'testuser2',
+        displayName: 'Test User 2',
+        isActive: true,
+        channels: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const expectedUser1Response: UserResponseDto = {
+        id: 'user-1',
+        email: 'test1@example.com',
+        username: 'testuser1',
+        displayName: 'Test User 1',
+        isActive: true,
+        createdAt: mockUser1.createdAt,
+        updatedAt: mockUser1.updatedAt,
+      };
+
+      const expectedUser2Response: UserResponseDto = {
+        id: 'user-2',
+        email: 'test2@example.com',
+        username: 'testuser2',
+        displayName: 'Test User 2',
+        isActive: true,
+        createdAt: mockUser2.createdAt,
+        updatedAt: mockUser2.updatedAt,
+      };
+
+      const channelWithMembers = { ...mockChannel, members: [mockUser1, mockUser2] };
+      mockRepository.findOne.mockResolvedValue(channelWithMembers);
+
+      const result = await service.findChannelMembers('1');
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual(expectedUser1Response);
+      expect(result[1]).toEqual(expectedUser2Response);
+      expect(result[0]).not.toHaveProperty('password');
+      expect(result[1]).not.toHaveProperty('password');
+    });
+
+    it('members가 null인 경우 빈 배열을 반환해야 함', async () => {
+      const channelWithNullMembers = { ...mockChannel, members: null };
+      mockRepository.findOne.mockResolvedValue(channelWithNullMembers);
+
+      const result = await service.findChannelMembers('1');
+
+      expect(result).toEqual([]);
     });
   });
 });
