@@ -1,9 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
+import { LoginDto } from './dto/login.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { User } from '../users/entities/userEntity';
 import * as bcrypt from 'bcrypt';
 
 // bcrypt 모킹
@@ -12,15 +16,32 @@ jest.mock('bcrypt');
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: UsersService;
+  let jwtService: JwtService;
 
   const mockUsersService = {
     findByUsername: jest.fn(),
+    findByEmail: jest.fn(),
     create: jest.fn(),
+  };
+
+  const mockJwtService = {
+    sign: jest.fn(),
   };
 
   const mockUserResponse: UserResponseDto = {
     id: '1',
     email: 'test@example.com',
+    username: 'testuser',
+    displayName: 'Test User',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockUser: User = {
+    id: '1',
+    email: 'test@example.com',
+    password: 'hashedPassword123',
     username: 'testuser',
     displayName: 'Test User',
     isActive: true,
@@ -36,11 +57,16 @@ describe('AuthService', () => {
           provide: UsersService,
           useValue: mockUsersService,
         },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
+        },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
     usersService = module.get<UsersService>(UsersService);
+    jwtService = module.get<JwtService>(JwtService);
   });
 
   afterEach(() => {
@@ -157,6 +183,99 @@ describe('AuthService', () => {
         expect.anything(),
         expect.anything(),
       );
+    });
+  });
+
+  describe('login', () => {
+    const loginDto: LoginDto = {
+      emailOrUsername: 'test@example.com',
+      password: 'Password123',
+    };
+
+    it('로그인에 성공해야 함', async () => {
+      const accessToken = 'mock-access-token';
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersService.findByUsername.mockResolvedValue(null);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockJwtService.sign.mockReturnValue(accessToken);
+
+      const result = await service.login(loginDto);
+
+      expect(result).toEqual({
+        user: mockUserResponse,
+        accessToken,
+      });
+      expect(usersService.findByEmail).toHaveBeenCalledWith(loginDto.emailOrUsername);
+      expect(bcrypt.compare).toHaveBeenCalledWith(loginDto.password, mockUser.password);
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        sub: mockUser.id,
+        email: mockUser.email,
+        username: mockUser.username,
+      });
+    });
+
+    it('사용자명으로 로그인에 성공해야 함', async () => {
+      const loginDtoWithUsername: LoginDto = {
+        emailOrUsername: 'testuser',
+        password: 'Password123',
+      };
+      const accessToken = 'mock-access-token';
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUsersService.findByUsername.mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      mockJwtService.sign.mockReturnValue(accessToken);
+
+      const result = await service.login(loginDtoWithUsername);
+
+      expect(result).toEqual({
+        user: mockUserResponse,
+        accessToken,
+      });
+      expect(usersService.findByEmail).toHaveBeenCalledWith(loginDtoWithUsername.emailOrUsername);
+      expect(usersService.findByUsername).toHaveBeenCalledWith(loginDtoWithUsername.emailOrUsername);
+    });
+
+    it('존재하지 않는 사용자로 로그인 시 UnauthorizedException을 던져야 함', async () => {
+      mockUsersService.findByEmail.mockResolvedValue(null);
+      mockUsersService.findByUsername.mockResolvedValue(null);
+
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        '이메일/사용자명 또는 비밀번호가 올바르지 않습니다.',
+      );
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith(loginDto.emailOrUsername);
+      expect(usersService.findByUsername).toHaveBeenCalledWith(loginDto.emailOrUsername);
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(jwtService.sign).not.toHaveBeenCalled();
+    });
+
+    it('비활성화된 계정으로 로그인 시 UnauthorizedException을 던져야 함', async () => {
+      const inactiveUser = { ...mockUser, isActive: false };
+      mockUsersService.findByEmail.mockResolvedValue(inactiveUser);
+      mockUsersService.findByUsername.mockResolvedValue(null);
+
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow('비활성화된 계정입니다. 관리자에게 문의하세요.');
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith(loginDto.emailOrUsername);
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(jwtService.sign).not.toHaveBeenCalled();
+    });
+
+    it('잘못된 비밀번호로 로그인 시 UnauthorizedException을 던져야 함', async () => {
+      mockUsersService.findByEmail.mockResolvedValue(mockUser);
+      mockUsersService.findByUsername.mockResolvedValue(null);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        '이메일/사용자명 또는 비밀번호가 올바르지 않습니다.',
+      );
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith(loginDto.emailOrUsername);
+      expect(bcrypt.compare).toHaveBeenCalledWith(loginDto.password, mockUser.password);
+      expect(jwtService.sign).not.toHaveBeenCalled();
     });
   });
 });

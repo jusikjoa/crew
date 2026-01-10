@@ -36,6 +36,35 @@
 						},
 						"description": "새로운 사용자로 회원가입합니다. 비밀번호는 대문자, 소문자, 숫자를 각각 하나 이상 포함해야 합니다."
 					}
+				},
+				{
+					"name": "로그인",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emailOrUsername\": \"user@example.com\",\n  \"password\": \"Password123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "이메일 또는 사용자명과 비밀번호로 로그인합니다. 성공 시 사용자 정보와 Access 토큰을 반환합니다."
+					}
 				}
 			]
 		},
