@@ -599,6 +599,192 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Messages",
+			"item": [
+				{
+					"name": "메시지 생성",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"description": "로그인 후 받은 accessToken을 여기에 입력하세요"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Hello, world!\",\n  \"channelId\": \"channel-id-here\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/messages",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"messages"
+							]
+						},
+						"description": "새로운 메시지를 생성합니다. 인증이 필요하며, 토큰에서 사용자 ID를 가져와 메시지의 authorId에 저장합니다. channelId는 필수입니다."
+					}
+				},
+				{
+					"name": "모든 메시지 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/messages",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"messages"
+							]
+						},
+						"description": "모든 메시지 목록을 조회합니다. 인증이 필요하지 않습니다."
+					}
+				},
+				{
+					"name": "특정 채널의 메시지 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/messages/channel/:channelId",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"messages",
+								"channel",
+								":channelId"
+							],
+							"variable": [
+								{
+									"key": "channelId",
+									"value": "channel-id-here",
+									"description": "채널 ID"
+								}
+							]
+						},
+						"description": "특정 채널의 모든 메시지를 조회합니다. 인증이 필요하지 않습니다."
+					}
+				},
+				{
+					"name": "특정 메시지 조회",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/messages/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"messages",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "message-id-here",
+									"description": "메시지 ID"
+								}
+							]
+						},
+						"description": "특정 메시지의 정보를 조회합니다. 인증이 필요하지 않습니다."
+					}
+				},
+				{
+					"name": "메시지 수정",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"description": "로그인 후 받은 accessToken을 여기에 입력하세요. 메시지 작성자만 수정 가능합니다."
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Updated message content\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:3000/messages/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"messages",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "message-id-here",
+									"description": "메시지 ID"
+								}
+							]
+						},
+						"description": "메시지 내용을 업데이트합니다. 인증이 필요하며, 메시지의 authorId와 토큰의 사용자 ID가 일치하는 경우에만 업데이트 가능합니다."
+					}
+				},
+				{
+					"name": "메시지 삭제",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}",
+								"description": "로그인 후 받은 accessToken을 여기에 입력하세요. 메시지 작성자만 삭제 가능합니다."
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/messages/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"messages",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "message-id-here",
+									"description": "메시지 ID"
+								}
+							]
+						},
+						"description": "메시지를 삭제합니다. 인증이 필요하며, 메시지의 authorId와 토큰의 사용자 ID가 일치하는 경우에만 삭제 가능합니다."
+					}
+				}
+			]
 		}
 	]
 }

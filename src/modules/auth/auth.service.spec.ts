@@ -7,7 +7,7 @@ import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
-import { User } from '../users/entities/userEntity';
+import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 // bcrypt 모킹

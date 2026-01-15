@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ChannelsService } from './channels.service';
 import { Channel } from './entities/channel.entity';
-import { User } from '../users/entities/userEntity';
+import { User } from '../users/entities/user.entity';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
