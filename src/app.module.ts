@@ -5,7 +5,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ChannelsModule } from './modules/channels/channels.module';
 import { MessagesModule } from './modules/messages/messages.module';
-import { User } from './modules/users/entities/userEntity';
+import { User } from './modules/users/entities/user.entity';
 import { Channel } from './modules/channels/entities/channel.entity';
 import { Message } from './modules/messages/entities/message.entity';
 

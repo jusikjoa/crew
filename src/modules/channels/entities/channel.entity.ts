@@ -8,7 +8,7 @@ import {
   JoinColumn,
   ManyToMany,
 } from 'typeorm';
-import { User } from '../../users/entities/userEntity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('channels')
 export class Channel {

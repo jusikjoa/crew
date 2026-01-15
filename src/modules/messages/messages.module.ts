@@ -4,7 +4,7 @@ import { MessagesController } from './messages.controller';
 import { MessagesService } from './messages.service';
 import { Message } from './entities/message.entity';
 import { Channel } from '../channels/entities/channel.entity';
-import { User } from '../users/entities/userEntity';
+import { User } from '../users/entities/user.entity';
 import { AuthModule } from '../auth/auth.module';
 import { ChannelsModule } from '../channels/channels.module';
 import { UsersModule } from '../users/users.module';

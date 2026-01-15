@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { User } from './entities/userEntity';
+import { User } from './entities/user.entity';
 import { UserResponseDto } from './dto/user-response.dto';
 
 describe('UsersService', () => {

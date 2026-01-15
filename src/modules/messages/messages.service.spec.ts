@@ -5,7 +5,7 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { Message } from './entities/message.entity';
 import { Channel } from '../channels/entities/channel.entity';
-import { User } from '../users/entities/userEntity';
+import { User } from '../users/entities/user.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { MessageResponseDto } from './dto/message-response.dto';
 
