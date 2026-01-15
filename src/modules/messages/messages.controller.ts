@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
   Delete,
   Body,
   Param,
@@ -12,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageResponseDto } from './dto/message-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -52,29 +50,12 @@ export class MessagesController {
    * 특정 채널의 메시지 조회
    */
   @Get('channel/:channelId')
-  async findByChannel(@Param('channelId') channelId: string): Promise<MessageResponseDto[]> {
-    return await this.messagesService.findByChannel(channelId);
-  }
-
-  /**
-   * 특정 메시지 조회
-   */
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<MessageResponseDto> {
-    return await this.messagesService.findOne(id);
-  }
-
-  /**
-   * 메시지 업데이트
-   */
-  @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  async update(
-    @Param('id') id: string,
-    @Body() updateMessageDto: UpdateMessageDto,
+  async findByChannel(
+    @Param('channelId') channelId: string,
     @CurrentUser() user: CurrentUserPayload,
-  ): Promise<MessageResponseDto> {
-    return await this.messagesService.update(id, updateMessageDto, user.userId);
+  ): Promise<MessageResponseDto[]> {
+    return await this.messagesService.findByChannel(channelId, user.userId);
   }
 
   /**

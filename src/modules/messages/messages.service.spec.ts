@@ -7,7 +7,6 @@ import { Message } from './entities/message.entity';
 import { Channel } from '../channels/entities/channel.entity';
 import { User } from '../users/entities/userEntity';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageResponseDto } from './dto/message-response.dto';
 
 describe('MessagesService', () => {
@@ -65,7 +64,7 @@ describe('MessagesService', () => {
     createdAt: fixedDate,
     updatedAt: fixedDate,
     creator: undefined,
-    members: undefined,
+    members: [mockUser],
   };
 
   const mockChannelResponse: any = {
@@ -136,7 +135,8 @@ describe('MessagesService', () => {
     };
 
     it('메시지를 성공적으로 생성해야 함', async () => {
-      mockChannelRepository.findOne.mockResolvedValue(mockChannel);
+      const channelWithMembers = { ...mockChannel, members: [mockUser] };
+      mockChannelRepository.findOne.mockResolvedValue(channelWithMembers);
       mockUserRepository.findOne.mockResolvedValue(mockUser);
       mockMessageRepository.create.mockReturnValue(mockMessage);
       mockMessageRepository.save.mockResolvedValue(mockMessage);
@@ -146,6 +146,7 @@ describe('MessagesService', () => {
       expect(result).toEqual(mockMessageResponse);
       expect(mockChannelRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'channel-1' },
+        relations: ['members'],
       });
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'user-1' },
@@ -164,12 +165,26 @@ describe('MessagesService', () => {
       await expect(service.create(createMessageDto, 'user-1')).rejects.toThrow(NotFoundException);
       expect(mockChannelRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'channel-1' },
+        relations: ['members'],
+      });
+      expect(mockMessageRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('채널 멤버가 아닌 사용자가 메시지를 생성하려고 하면 ForbiddenException을 던져야 함', async () => {
+      const channelWithoutUser = { ...mockChannel, members: [] };
+      mockChannelRepository.findOne.mockResolvedValue(channelWithoutUser);
+
+      await expect(service.create(createMessageDto, 'user-1')).rejects.toThrow(ForbiddenException);
+      expect(mockChannelRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'channel-1' },
+        relations: ['members'],
       });
       expect(mockMessageRepository.create).not.toHaveBeenCalled();
     });
 
     it('존재하지 않는 사용자가 메시지를 생성하려고 하면 NotFoundException을 던져야 함', async () => {
-      mockChannelRepository.findOne.mockResolvedValue(mockChannel);
+      const channelWithMembers = { ...mockChannel, members: [mockUser] };
+      mockChannelRepository.findOne.mockResolvedValue(channelWithMembers);
       mockUserRepository.findOne.mockResolvedValue(null);
 
       await expect(service.create(createMessageDto, 'user-1')).rejects.toThrow(NotFoundException);
@@ -206,14 +221,16 @@ describe('MessagesService', () => {
   describe('findByChannel', () => {
     it('특정 채널의 메시지를 조회해야 함', async () => {
       const messages = [mockMessage];
-      mockChannelRepository.findOne.mockResolvedValue(mockChannel);
+      const channelWithMembers = { ...mockChannel, members: [mockUser] };
+      mockChannelRepository.findOne.mockResolvedValue(channelWithMembers);
       mockMessageRepository.find.mockResolvedValue(messages);
 
-      const result = await service.findByChannel('channel-1');
+      const result = await service.findByChannel('channel-1', 'user-1');
 
       expect(result).toEqual([mockMessageResponse]);
       expect(mockChannelRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'channel-1' },
+        relations: ['members'],
       });
       expect(mockMessageRepository.find).toHaveBeenCalledWith({
         where: { channelId: 'channel-1' },
@@ -225,81 +242,38 @@ describe('MessagesService', () => {
     it('존재하지 않는 채널의 메시지를 조회하려고 하면 NotFoundException을 던져야 함', async () => {
       mockChannelRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findByChannel('channel-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findByChannel('channel-1', 'user-1')).rejects.toThrow(NotFoundException);
       expect(mockMessageRepository.find).not.toHaveBeenCalled();
     });
-  });
 
-  describe('findOne', () => {
-    it('ID로 메시지를 조회해야 함', async () => {
-      mockMessageRepository.findOne.mockResolvedValue(mockMessage);
+    it('채널 멤버가 아닌 사용자가 메시지를 조회하려고 하면 ForbiddenException을 던져야 함', async () => {
+      const channelWithoutUser = { ...mockChannel, members: [] };
+      mockChannelRepository.findOne.mockResolvedValue(channelWithoutUser);
 
-      const result = await service.findOne('message-1');
-
-      expect(result).toEqual(mockMessageResponse);
-      expect(mockMessageRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 'message-1' },
-        relations: ['author', 'channel'],
-      });
-    });
-
-    it('존재하지 않는 메시지를 조회하려고 하면 NotFoundException을 던져야 함', async () => {
-      mockMessageRepository.findOne.mockResolvedValue(null);
-
-      await expect(service.findOne('message-1')).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe('update', () => {
-    const updateMessageDto: UpdateMessageDto = {
-      content: 'Updated content',
-    };
-
-    it('메시지를 성공적으로 업데이트해야 함', async () => {
-      const updatedMessage = { ...mockMessage, content: 'Updated content' };
-      mockMessageRepository.findOne.mockResolvedValue(mockMessage);
-      mockMessageRepository.save.mockResolvedValue(updatedMessage);
-
-      const result = await service.update('message-1', updateMessageDto, 'user-1');
-
-      expect(result.content).toBe('Updated content');
-      expect(mockMessageRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 'message-1' },
-        relations: ['author', 'channel'],
-      });
-      expect(mockMessageRepository.save).toHaveBeenCalled();
-    });
-
-    it('존재하지 않는 메시지를 업데이트하려고 하면 NotFoundException을 던져야 함', async () => {
-      mockMessageRepository.findOne.mockResolvedValue(null);
-
-      await expect(service.update('message-1', updateMessageDto, 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
-      expect(mockMessageRepository.save).not.toHaveBeenCalled();
-    });
-
-    it('작성자가 아닌 사용자가 메시지를 업데이트하려고 하면 ForbiddenException을 던져야 함', async () => {
-      mockMessageRepository.findOne.mockResolvedValue(mockMessage);
-
-      await expect(service.update('message-1', updateMessageDto, 'user-2')).rejects.toThrow(
-        ForbiddenException,
-      );
-      expect(mockMessageRepository.save).not.toHaveBeenCalled();
+      await expect(service.findByChannel('channel-1', 'user-1')).rejects.toThrow(ForbiddenException);
+      expect(mockMessageRepository.find).not.toHaveBeenCalled();
     });
   });
 
   describe('remove', () => {
     it('메시지를 성공적으로 삭제해야 함', async () => {
-      mockMessageRepository.findOne.mockResolvedValue(mockMessage);
+      const messageWithChannel = { ...mockMessage, channel: mockChannel };
+      const channelWithMembers = { ...mockChannel, members: [mockUser] };
+      mockMessageRepository.findOne.mockResolvedValue(messageWithChannel);
+      mockChannelRepository.findOne.mockResolvedValue(channelWithMembers);
       mockMessageRepository.remove.mockResolvedValue(mockMessage);
 
       await service.remove('message-1', 'user-1');
 
       expect(mockMessageRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'message-1' },
+        relations: ['channel'],
       });
-      expect(mockMessageRepository.remove).toHaveBeenCalledWith(mockMessage);
+      expect(mockChannelRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'channel-1' },
+        relations: ['members'],
+      });
+      expect(mockMessageRepository.remove).toHaveBeenCalledWith(messageWithChannel);
     });
 
     it('존재하지 않는 메시지를 삭제하려고 하면 NotFoundException을 던져야 함', async () => {
@@ -313,6 +287,17 @@ describe('MessagesService', () => {
       mockMessageRepository.findOne.mockResolvedValue(mockMessage);
 
       await expect(service.remove('message-1', 'user-2')).rejects.toThrow(ForbiddenException);
+      expect(mockChannelRepository.findOne).not.toHaveBeenCalled();
+      expect(mockMessageRepository.remove).not.toHaveBeenCalled();
+    });
+
+    it('채널 멤버가 아닌 사용자가 메시지를 삭제하려고 하면 ForbiddenException을 던져야 함', async () => {
+      const messageWithChannel = { ...mockMessage, channel: mockChannel };
+      const channelWithoutUser = { ...mockChannel, members: [] };
+      mockMessageRepository.findOne.mockResolvedValue(messageWithChannel);
+      mockChannelRepository.findOne.mockResolvedValue(channelWithoutUser);
+
+      await expect(service.remove('message-1', 'user-1')).rejects.toThrow(ForbiddenException);
       expect(mockMessageRepository.remove).not.toHaveBeenCalled();
     });
   });

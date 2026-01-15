@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageResponseDto } from './dto/message-response.dto';
 import { Channel } from '../channels/entities/channel.entity';
 import { User } from '../users/entities/userEntity';
@@ -25,12 +24,19 @@ export class MessagesService {
    * 메시지 생성
    */
   async create(createMessageDto: CreateMessageDto, authorId: string): Promise<MessageResponseDto> {
-    // 채널 존재 확인
+    // 채널 존재 확인 및 멤버 확인
     const channel = await this.channelsRepository.findOne({
       where: { id: createMessageDto.channelId },
+      relations: ['members'],
     });
     if (!channel) {
       throw new NotFoundException('채널을 찾을 수 없습니다.');
+    }
+
+    // 사용자가 채널 멤버인지 확인
+    const isMember = channel.members?.some(member => member.id === authorId);
+    if (!isMember) {
+      throw new ForbiddenException('해당 채널의 멤버만 메시지를 작성할 수 있습니다.');
     }
 
     // 작성자 존재 확인
@@ -65,13 +71,20 @@ export class MessagesService {
   /**
    * 특정 채널의 메시지 조회
    */
-  async findByChannel(channelId: string): Promise<MessageResponseDto[]> {
-    // 채널 존재 확인
+  async findByChannel(channelId: string, userId: string): Promise<MessageResponseDto[]> {
+    // 채널 존재 확인 및 멤버 확인
     const channel = await this.channelsRepository.findOne({
       where: { id: channelId },
+      relations: ['members'],
     });
     if (!channel) {
       throw new NotFoundException('채널을 찾을 수 없습니다.');
+    }
+
+    // 사용자가 채널 멤버인지 확인
+    const isMember = channel.members?.some(member => member.id === userId);
+    if (!isMember) {
+      throw new ForbiddenException('해당 채널의 멤버만 메시지를 조회할 수 있습니다.');
     }
 
     const messages = await this.messagesRepository.find({
@@ -83,50 +96,12 @@ export class MessagesService {
   }
 
   /**
-   * ID로 메시지 조회
-   */
-  async findOne(id: string): Promise<MessageResponseDto> {
-    const message = await this.messagesRepository.findOne({
-      where: { id },
-      relations: ['author', 'channel'],
-    });
-    if (!message) {
-      throw new NotFoundException('메시지를 찾을 수 없습니다.');
-    }
-    return this.toResponseDto(message);
-  }
-
-  /**
-   * 메시지 업데이트
-   */
-  async update(id: string, updateMessageDto: UpdateMessageDto, userId: string): Promise<MessageResponseDto> {
-    const message = await this.messagesRepository.findOne({
-      where: { id },
-      relations: ['author', 'channel'],
-    });
-    if (!message) {
-      throw new NotFoundException('메시지를 찾을 수 없습니다.');
-    }
-
-    // 권한 체크: 메시지 작성자만 업데이트 가능
-    if (message.authorId !== userId) {
-      throw new ForbiddenException('메시지를 수정할 권한이 없습니다.');
-    }
-
-    if (updateMessageDto.content !== undefined) {
-      message.content = updateMessageDto.content;
-    }
-
-    const updatedMessage = await this.messagesRepository.save(message);
-    return this.toResponseDto(updatedMessage);
-  }
-
-  /**
    * 메시지 삭제
    */
   async remove(id: string, userId: string): Promise<void> {
     const message = await this.messagesRepository.findOne({
       where: { id },
+      relations: ['channel'],
     });
     if (!message) {
       throw new NotFoundException('메시지를 찾을 수 없습니다.');
@@ -135,6 +110,20 @@ export class MessagesService {
     // 권한 체크: 메시지 작성자만 삭제 가능
     if (message.authorId !== userId) {
       throw new ForbiddenException('메시지를 삭제할 권한이 없습니다.');
+    }
+
+    // 채널 멤버 확인
+    const channel = await this.channelsRepository.findOne({
+      where: { id: message.channelId },
+      relations: ['members'],
+    });
+    if (!channel) {
+      throw new NotFoundException('채널을 찾을 수 없습니다.');
+    }
+
+    const isMember = channel.members?.some(member => member.id === userId);
+    if (!isMember) {
+      throw new ForbiddenException('해당 채널의 멤버만 메시지를 삭제할 수 있습니다.');
     }
 
     await this.messagesRepository.remove(message);

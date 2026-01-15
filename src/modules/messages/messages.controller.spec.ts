@@ -3,7 +3,6 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MessagesController } from './messages.controller';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessageResponseDto } from './dto/message-response.dto';
 
 describe('MessagesController', () => {
@@ -14,8 +13,6 @@ describe('MessagesController', () => {
     create: jest.fn(),
     findAll: jest.fn(),
     findByChannel: jest.fn(),
-    findOne: jest.fn(),
-    update: jest.fn(),
     remove: jest.fn(),
   };
 
@@ -124,73 +121,19 @@ describe('MessagesController', () => {
       const messages = [mockMessageResponse];
       mockMessagesService.findByChannel.mockResolvedValue(messages);
 
-      const result = await controller.findByChannel('channel-1');
+      const result = await controller.findByChannel('channel-1', mockCurrentUser);
 
       expect(result).toEqual(messages);
-      expect(service.findByChannel).toHaveBeenCalledWith('channel-1');
+      expect(service.findByChannel).toHaveBeenCalledWith('channel-1', mockCurrentUser.userId);
       expect(service.findByChannel).toHaveBeenCalledTimes(1);
     });
 
     it('채널에 메시지가 없으면 빈 배열을 반환해야 함', async () => {
       mockMessagesService.findByChannel.mockResolvedValue([]);
 
-      const result = await controller.findByChannel('channel-1');
+      const result = await controller.findByChannel('channel-1', mockCurrentUser);
 
       expect(result).toEqual([]);
-    });
-  });
-
-  describe('findOne', () => {
-    it('ID로 메시지를 조회해야 함', async () => {
-      mockMessagesService.findOne.mockResolvedValue(mockMessageResponse);
-
-      const result = await controller.findOne('message-1');
-
-      expect(result).toEqual(mockMessageResponse);
-      expect(service.findOne).toHaveBeenCalledWith('message-1');
-      expect(service.findOne).toHaveBeenCalledTimes(1);
-    });
-
-    it('존재하지 않는 메시지를 조회하려고 하면 NotFoundException을 던져야 함', async () => {
-      mockMessagesService.findOne.mockRejectedValue(new NotFoundException('메시지를 찾을 수 없습니다.'));
-
-      await expect(controller.findOne('message-1')).rejects.toThrow(NotFoundException);
-      expect(service.findOne).toHaveBeenCalledWith('message-1');
-    });
-  });
-
-  describe('update', () => {
-    const updateMessageDto: UpdateMessageDto = {
-      content: 'Updated content',
-    };
-
-    it('메시지를 성공적으로 업데이트해야 함', async () => {
-      const updatedMessage = { ...mockMessageResponse, content: 'Updated content' };
-      mockMessagesService.update.mockResolvedValue(updatedMessage);
-
-      const result = await controller.update('message-1', updateMessageDto, mockCurrentUser);
-
-      expect(result).toEqual(updatedMessage);
-      expect(service.update).toHaveBeenCalledWith('message-1', updateMessageDto, mockCurrentUser.userId);
-      expect(service.update).toHaveBeenCalledTimes(1);
-    });
-
-    it('존재하지 않는 메시지를 업데이트하려고 하면 NotFoundException을 던져야 함', async () => {
-      mockMessagesService.update.mockRejectedValue(new NotFoundException('메시지를 찾을 수 없습니다.'));
-
-      await expect(controller.update('message-1', updateMessageDto, mockCurrentUser)).rejects.toThrow(
-        NotFoundException,
-      );
-      expect(service.update).toHaveBeenCalledWith('message-1', updateMessageDto, mockCurrentUser.userId);
-    });
-
-    it('작성자가 아닌 사용자가 메시지를 업데이트하려고 하면 ForbiddenException을 던져야 함', async () => {
-      mockMessagesService.update.mockRejectedValue(new ForbiddenException('메시지를 수정할 권한이 없습니다.'));
-
-      await expect(controller.update('message-1', updateMessageDto, mockCurrentUser)).rejects.toThrow(
-        ForbiddenException,
-      );
-      expect(service.update).toHaveBeenCalledWith('message-1', updateMessageDto, mockCurrentUser.userId);
     });
   });
 
