@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { Channel } from './entities/channel.entity';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
+import { JoinChannelDto } from './dto/join-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
 import { User } from '../users/entities/user.entity';
 import { UserResponseDto } from '../users/dto/user-response.dto';
@@ -29,10 +31,17 @@ export class ChannelsService {
       throw new ConflictException('이미 존재하는 채널 이름입니다.');
     }
 
+    // 비밀번호가 제공된 경우 해시화
+    let hashedPassword: string | null = null;
+    if (createChannelDto.password) {
+      hashedPassword = await bcrypt.hash(createChannelDto.password, 10);
+    }
+
     const channel = this.channelsRepository.create({
       name: createChannelDto.name,
       description: createChannelDto.description || null,
       isPublic: createChannelDto.isPublic !== undefined ? createChannelDto.isPublic : true,
+      password: hashedPassword,
       createdBy: createdBy || null,
     });
 
@@ -107,7 +116,14 @@ export class ChannelsService {
       }
     }
 
-    Object.assign(channel, updateChannelDto);
+    // 비밀번호 변경 시 해시화
+    if (updateChannelDto.password) {
+      channel.password = await bcrypt.hash(updateChannelDto.password, 10);
+    }
+
+    // 비밀번호를 제외한 나머지 필드 업데이트
+    const { password, ...updateDataWithoutPassword } = updateChannelDto;
+    Object.assign(channel, updateDataWithoutPassword);
     const updatedChannel = await this.channelsRepository.save(channel);
     return this.toResponseDto(updatedChannel);
   }
@@ -132,7 +148,7 @@ export class ChannelsService {
   /**
    * 채널 참여
    */
-  async joinChannel(channelId: string, userId: string): Promise<ChannelResponseDto> {
+  async joinChannel(channelId: string, userId: string, joinChannelDto?: JoinChannelDto): Promise<ChannelResponseDto> {
     const channel = await this.channelsRepository.findOne({
       where: { id: channelId },
       relations: ['members'],
@@ -141,9 +157,22 @@ export class ChannelsService {
       throw new NotFoundException('채널을 찾을 수 없습니다.');
     }
 
-    // 비공개 채널인 경우 참여 불가
+    // 비공개 채널인 경우 비밀번호 검증 필요
     if (channel.isPublic === false) {
-      throw new ForbiddenException('비공개 채널에는 참여할 수 없습니다.');
+      // 비밀번호가 설정되어 있는 경우
+      if (channel.password) {
+        // 요청에 비밀번호가 없거나 틀린 경우
+        if (!joinChannelDto?.password) {
+          throw new UnauthorizedException('비공개 채널 참여를 위해서는 비밀번호가 필요합니다.');
+        }
+        const isPasswordValid = await bcrypt.compare(joinChannelDto.password, channel.password);
+        if (!isPasswordValid) {
+          throw new UnauthorizedException('채널 비밀번호가 올바르지 않습니다.');
+        }
+      } else {
+        // 비밀번호가 설정되지 않은 비공개 채널은 참여 불가
+        throw new ForbiddenException('비공개 채널에는 참여할 수 없습니다.');
+      }
     }
 
     const user = await this.usersRepository.findOne({ where: { id: userId } });

@@ -13,6 +13,7 @@ import {
 import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
+import { JoinChannelDto } from './dto/join-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -108,9 +109,10 @@ export class ChannelsController {
   @HttpCode(HttpStatus.OK)
   async joinChannel(
     @Param('id') channelId: string,
+    @Body() joinChannelDto: JoinChannelDto,
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<ChannelResponseDto> {
-    return await this.channelsService.joinChannel(channelId, user.userId);
+    return await this.channelsService.joinChannel(channelId, user.userId, joinChannelDto);
   }
 
   /**

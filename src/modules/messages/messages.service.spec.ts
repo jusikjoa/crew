@@ -60,6 +60,7 @@ describe('MessagesService', () => {
     name: 'general',
     description: '일반 채널',
     isPublic: true,
+    password: null,
     createdBy: 'user-1',
     createdAt: fixedDate,
     updatedAt: fixedDate,

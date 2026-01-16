@@ -4,6 +4,7 @@ import { ChannelsController } from './channels.controller';
 import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
+import { JoinChannelDto } from './dto/join-channel.dto';
 import { ChannelResponseDto } from './dto/channel-response.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 
@@ -350,11 +351,12 @@ describe('ChannelsController', () => {
 
     it('채널에 성공적으로 참여해야 함', async () => {
       mockChannelsService.joinChannel.mockResolvedValue(mockChannelResponse);
+      const joinChannelDto: JoinChannelDto = {};
 
-      const result = await controller.joinChannel(channelId, mockCurrentUser);
+      const result = await controller.joinChannel(channelId, joinChannelDto, mockCurrentUser);
 
       expect(result).toEqual(mockChannelResponse);
-      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId, joinChannelDto);
       expect(service.joinChannel).toHaveBeenCalledTimes(1);
     });
 
@@ -362,33 +364,36 @@ describe('ChannelsController', () => {
       mockChannelsService.joinChannel.mockRejectedValue(
         new NotFoundException('채널을 찾을 수 없습니다.'),
       );
+      const joinChannelDto: JoinChannelDto = {};
 
-      await expect(controller.joinChannel('999', mockCurrentUser)).rejects.toThrow(NotFoundException);
-      await expect(controller.joinChannel('999', mockCurrentUser)).rejects.toThrow('채널을 찾을 수 없습니다.');
+      await expect(controller.joinChannel('999', joinChannelDto, mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.joinChannel('999', joinChannelDto, mockCurrentUser)).rejects.toThrow('채널을 찾을 수 없습니다.');
 
-      expect(service.joinChannel).toHaveBeenCalledWith('999', mockCurrentUser.userId);
+      expect(service.joinChannel).toHaveBeenCalledWith('999', mockCurrentUser.userId, joinChannelDto);
     });
 
     it('이미 참여 중인 채널에 참여 시 ConflictException을 던져야 함', async () => {
       mockChannelsService.joinChannel.mockRejectedValue(
         new ConflictException('이미 참여 중인 채널입니다.'),
       );
+      const joinChannelDto: JoinChannelDto = {};
 
-      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow(ConflictException);
-      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow('이미 참여 중인 채널입니다.');
+      await expect(controller.joinChannel(channelId, joinChannelDto, mockCurrentUser)).rejects.toThrow(ConflictException);
+      await expect(controller.joinChannel(channelId, joinChannelDto, mockCurrentUser)).rejects.toThrow('이미 참여 중인 채널입니다.');
 
-      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId, joinChannelDto);
     });
 
     it('존재하지 않는 사용자가 참여 시 NotFoundException을 던져야 함', async () => {
       mockChannelsService.joinChannel.mockRejectedValue(
         new NotFoundException('사용자를 찾을 수 없습니다.'),
       );
+      const joinChannelDto: JoinChannelDto = {};
 
-      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow(NotFoundException);
-      await expect(controller.joinChannel(channelId, mockCurrentUser)).rejects.toThrow('사용자를 찾을 수 없습니다.');
+      await expect(controller.joinChannel(channelId, joinChannelDto, mockCurrentUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.joinChannel(channelId, joinChannelDto, mockCurrentUser)).rejects.toThrow('사용자를 찾을 수 없습니다.');
 
-      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId);
+      expect(service.joinChannel).toHaveBeenCalledWith(channelId, mockCurrentUser.userId, joinChannelDto);
     });
   });
 

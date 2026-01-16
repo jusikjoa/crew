@@ -32,6 +32,7 @@ describe('ChannelsService', () => {
     name: 'general',
     description: '일반 채널',
     isPublic: true,
+    password: null,
     createdBy: 'user-1',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -388,6 +389,7 @@ describe('ChannelsService', () => {
         name: 'general',
         description: '일반 채널',
         isPublic: true,
+        password: null,
         createdBy: 'user-1',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -464,6 +466,7 @@ describe('ChannelsService', () => {
         name: 'general',
         description: '일반 채널',
         isPublic: true,
+        password: null,
         createdBy: 'user-1',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -475,6 +478,7 @@ describe('ChannelsService', () => {
         name: 'random',
         description: '랜덤 채널',
         isPublic: true,
+        password: null,
         createdBy: 'user-2',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -530,6 +534,7 @@ describe('ChannelsService', () => {
         name: 'general',
         description: '일반 채널',
         isPublic: true,
+        password: null,
         createdBy: 'user-1',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -587,7 +592,7 @@ describe('ChannelsService', () => {
     });
 
     it('존재하지 않는 사용자가 참여 시 NotFoundException을 던져야 함', async () => {
-      const channelWithoutMembers = { ...mockChannel, members: [] };
+      const channelWithoutMembers = { ...mockChannel, members: [], isPublic: true, password: null };
       mockRepository.findOne.mockResolvedValue(channelWithoutMembers);
       mockUserRepository.findOne.mockResolvedValue(null);
 
@@ -603,6 +608,7 @@ describe('ChannelsService', () => {
         name: 'general',
         description: '일반 채널',
         isPublic: true,
+        password: null,
         createdBy: 'user-1',
         createdAt: new Date(),
         updatedAt: new Date(),

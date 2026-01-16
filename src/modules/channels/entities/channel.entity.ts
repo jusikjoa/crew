@@ -25,6 +25,9 @@ export class Channel {
   isPublic: boolean; // 공개 채널 여부
 
   @Column({ nullable: true })
+  password: string | null; // 채널 비밀번호 (해시화된 값)
+
+  @Column({ nullable: true })
   createdBy: string; // 생성자 ID (User와의 관계)
 
   @ManyToOne(() => User, { nullable: true })
