@@ -141,6 +141,11 @@ export class ChannelsService {
       throw new NotFoundException('채널을 찾을 수 없습니다.');
     }
 
+    // 비공개 채널인 경우 참여 불가
+    if (channel.isPublic === false) {
+      throw new ForbiddenException('비공개 채널에는 참여할 수 없습니다.');
+    }
+
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
