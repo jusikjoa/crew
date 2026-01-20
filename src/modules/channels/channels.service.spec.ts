@@ -352,13 +352,18 @@ describe('ChannelsService', () => {
 
   describe('remove', () => {
     it('채널을 성공적으로 삭제해야 함', async () => {
-      mockRepository.findOne.mockResolvedValue(mockChannel);
-      mockRepository.remove.mockResolvedValue(mockChannel);
+      const channelWithoutMembers = { ...mockChannel, members: [] };
+      mockRepository.findOne.mockResolvedValue(channelWithoutMembers);
+      mockRepository.save.mockResolvedValue(channelWithoutMembers);
+      mockRepository.remove.mockResolvedValue(channelWithoutMembers);
 
       await service.remove('1', 'user-1');
 
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: '1' } });
-      expect(mockRepository.remove).toHaveBeenCalledWith(mockChannel);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+        relations: ['members'],
+      });
+      expect(mockRepository.remove).toHaveBeenCalledWith(channelWithoutMembers);
     });
 
     it('존재하지 않는 채널 삭제 시 NotFoundException을 던져야 함', async () => {
@@ -367,18 +372,50 @@ describe('ChannelsService', () => {
       await expect(service.remove('999', 'user-1')).rejects.toThrow(NotFoundException);
       await expect(service.remove('999', 'user-1')).rejects.toThrow('채널을 찾을 수 없습니다.');
 
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '999' },
+        relations: ['members'],
+      });
       expect(mockRepository.remove).not.toHaveBeenCalled();
     });
 
     it('권한이 없는 사용자가 삭제 시 ForbiddenException을 던져야 함', async () => {
-      mockRepository.findOne.mockResolvedValue(mockChannel);
+      const channelWithoutMembers = { ...mockChannel, members: [] };
+      mockRepository.findOne.mockResolvedValue(channelWithoutMembers);
 
       await expect(service.remove('1', 'user-2')).rejects.toThrow(ForbiddenException);
       await expect(service.remove('1', 'user-2')).rejects.toThrow(
         '채널을 삭제할 권한이 없습니다.',
       );
 
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+        relations: ['members'],
+      });
       expect(mockRepository.remove).not.toHaveBeenCalled();
+    });
+
+    it('멤버가 있는 채널 삭제 시 관계를 먼저 제거해야 함', async () => {
+      const mockMember = {
+        id: 'user-2',
+        email: 'member@example.com',
+        username: 'member',
+      };
+      const channelWithMembers = { ...mockChannel, members: [mockMember] };
+      const channelWithoutMembers = { ...mockChannel, members: [] };
+
+      mockRepository.findOne.mockResolvedValue(channelWithMembers);
+      mockRepository.save.mockResolvedValue(channelWithoutMembers);
+      mockRepository.remove.mockResolvedValue(channelWithoutMembers);
+
+      await service.remove('1', 'user-1');
+
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: '1' },
+        relations: ['members'],
+      });
+      expect(mockRepository.save).toHaveBeenCalledWith(channelWithoutMembers);
+      expect(mockRepository.remove).toHaveBeenCalledWith(channelWithoutMembers);
     });
   });
 

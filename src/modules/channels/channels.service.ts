@@ -132,7 +132,10 @@ export class ChannelsService {
    * 채널 삭제
    */
   async remove(id: string, userId: string): Promise<void> {
-    const channel = await this.channelsRepository.findOne({ where: { id } });
+    const channel = await this.channelsRepository.findOne({
+      where: { id },
+      relations: ['members'],
+    });
     if (!channel) {
       throw new NotFoundException('채널을 찾을 수 없습니다.');
     }
@@ -142,6 +145,13 @@ export class ChannelsService {
       throw new ForbiddenException('채널을 삭제할 권한이 없습니다.');
     }
 
+    // Many-to-Many 관계 제거
+    if (channel.members && channel.members.length > 0) {
+      channel.members = [];
+      await this.channelsRepository.save(channel);
+    }
+
+    // 채널 삭제 (CASCADE로 인해 관련 메시지도 자동 삭제됨)
     await this.channelsRepository.remove(channel);
   }
 
