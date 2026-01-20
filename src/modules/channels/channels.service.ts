@@ -170,6 +170,18 @@ export class ChannelsService {
       }
     }
 
+    // createdBy 변경 시 처리
+    if (updateChannelDto.createdBy && updateChannelDto.createdBy !== channel.createdBy) {
+      // 새로운 생성자 사용자 존재 확인
+      const newCreator = await this.usersRepository.findOne({
+        where: { id: updateChannelDto.createdBy },
+      });
+
+      if (!newCreator) {
+        throw new NotFoundException('새로운 생성자 사용자를 찾을 수 없습니다.');
+      }
+    }
+
     // 비밀번호 변경 시 해시화
     if (updateChannelDto.password) {
       channel.password = await bcrypt.hash(updateChannelDto.password, 10);

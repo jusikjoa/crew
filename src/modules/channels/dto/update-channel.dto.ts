@@ -25,5 +25,9 @@ export class UpdateChannelDto {
   @MinLength(4, { message: '비밀번호는 최소 4자 이상이어야 합니다.' })
   @MaxLength(100, { message: '비밀번호는 100자 이하여야 합니다.' })
   password?: string;
+
+  @IsOptional()
+  @IsString({ message: '생성자 ID는 문자열이어야 합니다.' })
+  createdBy?: string; // 채널 생성자 ID
 }
 
