@@ -17,6 +17,10 @@ export class UpdateChannelDto {
   isPublic?: boolean;
 
   @IsOptional()
+  @IsBoolean({ message: 'DM 여부는 boolean이어야 합니다.' })
+  isDM?: boolean;
+
+  @IsOptional()
   @IsString({ message: '비밀번호는 문자열이어야 합니다.' })
   @MinLength(4, { message: '비밀번호는 최소 4자 이상이어야 합니다.' })
   @MaxLength(100, { message: '비밀번호는 100자 이하여야 합니다.' })

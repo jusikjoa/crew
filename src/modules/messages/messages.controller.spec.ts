@@ -37,6 +37,7 @@ describe('MessagesController', () => {
       name: 'general',
       description: '일반 채널',
       isPublic: true,
+      isDM: false,
       createdBy: 'user-1',
       createdAt: fixedDate,
       updatedAt: fixedDate,

@@ -154,6 +154,7 @@ export class MessagesService {
         name: message.channel.name,
         description: message.channel.description,
         isPublic: message.channel.isPublic,
+        isDM: message.channel.isDM,
         createdBy: message.channel.createdBy,
         createdAt: message.channel.createdAt,
         updatedAt: message.channel.updatedAt,

@@ -41,14 +41,67 @@ export class ChannelsService {
       name: createChannelDto.name,
       description: createChannelDto.description || null,
       isPublic: createChannelDto.isPublic !== undefined ? createChannelDto.isPublic : true,
+      isDM: createChannelDto.isDM !== undefined ? createChannelDto.isDM : false,
       password: hashedPassword,
       createdBy: createdBy || null,
     });
 
     const savedChannel = await this.channelsRepository.save(channel);
 
-    // createdBy가 있는 경우, 생성자를 자동으로 채널 멤버에 추가
-    if (createdBy) {
+    // DM 채널인 경우 처리
+    if (savedChannel.isDM) {
+      if (!createdBy) {
+        throw new BadRequestException('DM 채널 생성 시 생성자 정보가 필요합니다.');
+      }
+
+      if (!createChannelDto.recipientId) {
+        throw new BadRequestException('DM 채널 생성 시 상대방 ID(recipientId)가 필요합니다.');
+      }
+
+      // 생성자와 상대방이 같은 경우 방지
+      if (createdBy === createChannelDto.recipientId) {
+        throw new BadRequestException('자기 자신과 DM 채널을 생성할 수 없습니다.');
+      }
+
+      // 생성자 조회
+      const creator = await this.usersRepository.findOne({
+        where: { id: createdBy },
+        relations: ['channels'],
+      });
+
+      if (!creator) {
+        throw new NotFoundException('생성자를 찾을 수 없습니다.');
+      }
+
+      // 상대방 조회
+      const recipient = await this.usersRepository.findOne({
+        where: { id: createChannelDto.recipientId },
+        relations: ['channels'],
+      });
+
+      if (!recipient) {
+        throw new NotFoundException('상대방 사용자를 찾을 수 없습니다.');
+      }
+
+      // 두 사용자를 모두 채널 멤버로 추가
+      savedChannel.members = [creator, recipient];
+      await this.channelsRepository.save(savedChannel);
+
+      // 생성자의 channels에 채널 추가
+      if (!creator.channels) {
+        creator.channels = [];
+      }
+      creator.channels.push(savedChannel);
+      await this.usersRepository.save(creator);
+
+      // 상대방의 channels에 채널 추가
+      if (!recipient.channels) {
+        recipient.channels = [];
+      }
+      recipient.channels.push(savedChannel);
+      await this.usersRepository.save(recipient);
+    } else if (createdBy) {
+      // 일반 채널인 경우, 생성자를 자동으로 채널 멤버에 추가
       const creator = await this.usersRepository.findOne({
         where: { id: createdBy },
         relations: ['channels'],
@@ -72,10 +125,11 @@ export class ChannelsService {
   }
 
   /**
-   * 모든 채널 조회
+   * 모든 채널 조회 (DM 채널 제외)
    */
   async findAll(): Promise<ChannelResponseDto[]> {
     const channels = await this.channelsRepository.find({
+      where: { isDM: false },
       order: { createdAt: 'DESC' },
     });
     return channels.map(channel => this.toResponseDto(channel));
@@ -283,6 +337,7 @@ export class ChannelsService {
       name: channel.name,
       description: channel.description,
       isPublic: channel.isPublic,
+      isDM: channel.isDM,
       createdBy: channel.createdBy,
       createdAt: channel.createdAt,
       updatedAt: channel.updatedAt,

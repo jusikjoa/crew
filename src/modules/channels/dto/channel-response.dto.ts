@@ -3,6 +3,7 @@ export class ChannelResponseDto {
   name: string;
   description: string | null;
   isPublic: boolean;
+  isDM: boolean;
   createdBy: string | null;
   createdAt: Date;
   updatedAt: Date;

@@ -24,6 +24,9 @@ export class Channel {
   @Column({ default: true })
   isPublic: boolean; // 공개 채널 여부
 
+  @Column({ default: false })
+  isDM: boolean; // DM 채널 여부
+
   @Column({ nullable: true })
   password: string | null; // 채널 비밀번호 (해시화된 값)
 
