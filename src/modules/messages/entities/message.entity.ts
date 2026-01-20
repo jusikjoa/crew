@@ -28,7 +28,7 @@ export class Message {
   @Column()
   channelId: string; // 채널 ID
 
-  @ManyToOne(() => Channel, { nullable: false })
+  @ManyToOne(() => Channel, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'channelId' })
   channel?: Channel;
 

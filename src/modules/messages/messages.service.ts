@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Message } from './entities/message.entity';
@@ -8,6 +8,7 @@ import { Channel } from '../channels/entities/channel.entity';
 import { User } from '../users/entities/user.entity';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { ChannelResponseDto } from '../channels/dto/channel-response.dto';
+import { MessagesGateway } from './messages.gateway';
 
 @Injectable()
 export class MessagesService {
@@ -18,6 +19,8 @@ export class MessagesService {
     private channelsRepository: Repository<Channel>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @Inject(MessagesGateway)
+    private messagesGateway: MessagesGateway,
   ) {}
 
   /**
@@ -54,7 +57,21 @@ export class MessagesService {
     });
 
     const savedMessage = await this.messagesRepository.save(message);
-    return this.toResponseDto(savedMessage);
+    
+    // 관계를 로드하여 응답 DTO 생성
+    const messageWithRelations = await this.messagesRepository.findOne({
+      where: { id: savedMessage.id },
+      relations: ['author', 'channel'],
+    });
+    
+    const messageDto = this.toResponseDto(messageWithRelations);
+    
+    // WebSocket으로 새 메시지 브로드캐스트
+    if (this.messagesGateway) {
+      this.messagesGateway.broadcastNewMessage(createMessageDto.channelId, messageDto);
+    }
+    
+    return messageDto;
   }
 
   /**
@@ -126,7 +143,15 @@ export class MessagesService {
       throw new ForbiddenException('해당 채널의 멤버만 메시지를 삭제할 수 있습니다.');
     }
 
+    const channelId = message.channelId;
+    const messageId = message.id;
+
     await this.messagesRepository.remove(message);
+
+    // WebSocket으로 메시지 삭제 브로드캐스트
+    if (this.messagesGateway) {
+      this.messagesGateway.broadcastDeletedMessage(channelId, messageId);
+    }
   }
 
   /**
@@ -154,6 +179,7 @@ export class MessagesService {
         name: message.channel.name,
         description: message.channel.description,
         isPublic: message.channel.isPublic,
+        isDM: message.channel.isDM,
         createdBy: message.channel.createdBy,
         createdAt: message.channel.createdAt,
         updatedAt: message.channel.updatedAt,

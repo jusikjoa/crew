@@ -4,6 +4,18 @@
 		"description": "Crew API 테스트용 Postman 컬렉션",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
+	"variable": [
+		{
+			"key": "port",
+			"value": "3000",
+			"type": "string"
+		},
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:{{port}}",
+			"type": "string"
+		}
+	],
 	"item": [
 		{
 			"name": "Auth",
@@ -23,12 +35,12 @@
 							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123\",\n  \"username\": \"testuser\",\n  \"displayName\": \"Test User\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/auth/signup",
+							"raw": "http://localhost:{{port}}/auth/signup",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"auth",
 								"signup"
@@ -69,12 +81,12 @@
 							"raw": "{\n  \"emailOrUsername\": \"user@example.com\",\n  \"password\": \"Password123\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/auth/login",
+							"raw": "http://localhost:{{port}}/auth/login",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"auth",
 								"login"
@@ -94,12 +106,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/users",
+							"raw": "http://localhost:{{port}}/users",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users"
 							]
@@ -113,12 +125,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/users/:id",
+							"raw": "http://localhost:{{port}}/users/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users",
 								":id"
@@ -149,12 +161,12 @@
 							"raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"username\": \"testuser\",\n  \"displayName\": \"Test User\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/users",
+							"raw": "http://localhost:{{port}}/users",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users"
 							]
@@ -177,12 +189,12 @@
 							"raw": "{\n  \"email\": \"updated@example.com\",\n  \"username\": \"updateduser\",\n  \"displayName\": \"Updated User\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/users/:id",
+							"raw": "http://localhost:{{port}}/users/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users",
 								":id"
@@ -213,12 +225,12 @@
 							"raw": "{\n  \"newPassword\": \"newpassword123\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/users/:id/password",
+							"raw": "http://localhost:{{port}}/users/:id/password",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users",
 								":id",
@@ -241,12 +253,12 @@
 						"method": "PATCH",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/users/:id/activate",
+							"raw": "http://localhost:{{port}}/users/:id/activate",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users",
 								":id",
@@ -269,12 +281,12 @@
 						"method": "PATCH",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/users/:id/deactivate",
+							"raw": "http://localhost:{{port}}/users/:id/deactivate",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users",
 								":id",
@@ -297,12 +309,12 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/users/:id",
+							"raw": "http://localhost:{{port}}/users/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"users",
 								":id"
@@ -329,12 +341,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/channels",
+							"raw": "http://localhost:{{port}}/channels",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels"
 							]
@@ -354,12 +366,12 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/channels/my-channels",
+							"raw": "http://localhost:{{port}}/channels/my-channels",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels",
 								"my-channels"
@@ -374,12 +386,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/channels/:id",
+							"raw": "http://localhost:{{port}}/channels/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels",
 								":id"
@@ -401,12 +413,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/channels/:id/members",
+							"raw": "http://localhost:{{port}}/channels/:id/members",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels",
 								":id",
@@ -443,12 +455,12 @@
 							"raw": "{\n  \"name\": \"general\",\n  \"description\": \"일반 채널\",\n  \"isPublic\": true\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/channels",
+							"raw": "http://localhost:{{port}}/channels",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels"
 							]
@@ -476,12 +488,12 @@
 							"raw": "{\n  \"name\": \"updated-channel\",\n  \"description\": \"업데이트된 채널 설명\",\n  \"isPublic\": false\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/channels/:id",
+							"raw": "http://localhost:{{port}}/channels/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels",
 								":id"
@@ -509,12 +521,12 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/channels/:id/join",
+							"raw": "http://localhost:{{port}}/channels/:id/join",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels",
 								":id",
@@ -543,12 +555,12 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/channels/:id/leave",
+							"raw": "http://localhost:{{port}}/channels/:id/leave",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels",
 								":id",
@@ -577,12 +589,12 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/channels/:id",
+							"raw": "http://localhost:{{port}}/channels/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"channels",
 								":id"
@@ -623,12 +635,12 @@
 							"raw": "{\n  \"content\": \"Hello, world!\",\n  \"channelId\": \"channel-id-here\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/messages",
+							"raw": "http://localhost:{{port}}/messages",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"messages"
 							]
@@ -642,12 +654,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/messages",
+							"raw": "http://localhost:{{port}}/messages",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"messages"
 							]
@@ -661,12 +673,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/messages/channel/:channelId",
+							"raw": "http://localhost:{{port}}/messages/channel/:channelId",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"messages",
 								"channel",
@@ -689,12 +701,12 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/messages/:id",
+							"raw": "http://localhost:{{port}}/messages/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"messages",
 								":id"
@@ -730,12 +742,12 @@
 							"raw": "{\n  \"content\": \"Updated message content\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:3000/messages/:id",
+							"raw": "http://localhost:{{port}}/messages/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"messages",
 								":id"
@@ -763,12 +775,12 @@
 							}
 						],
 						"url": {
-							"raw": "http://localhost:3000/messages/:id",
+							"raw": "http://localhost:{{port}}/messages/:id",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
-							"port": "3000",
+							"port": "{{port}}",
 							"path": [
 								"messages",
 								":id"
