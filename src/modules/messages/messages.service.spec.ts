@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MessagesService } from './messages.service';
+import { MessagesGateway } from './messages.gateway';
 import { Message } from './entities/message.entity';
 import { Channel } from '../channels/entities/channel.entity';
 import { User } from '../users/entities/user.entity';
@@ -102,6 +103,11 @@ describe('MessagesService', () => {
     updatedAt: fixedDate,
   };
 
+  const mockMessagesGateway = {
+    broadcastNewMessage: jest.fn(),
+    broadcastDeletedMessage: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -117,6 +123,10 @@ describe('MessagesService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
+        },
+        {
+          provide: MessagesGateway,
+          useValue: mockMessagesGateway,
         },
       ],
     }).compile();
@@ -143,6 +153,8 @@ describe('MessagesService', () => {
       mockUserRepository.findOne.mockResolvedValue(mockUser);
       mockMessageRepository.create.mockReturnValue(mockMessage);
       mockMessageRepository.save.mockResolvedValue(mockMessage);
+      // 관계를 로드하기 위한 findOne mock
+      mockMessageRepository.findOne.mockResolvedValue(mockMessage);
 
       const result = await service.create(createMessageDto, 'user-1');
 

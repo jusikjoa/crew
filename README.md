@@ -7,8 +7,13 @@ Crew는 Slack과 유사한 기능을 제공하는 협업 메신저 서비스입�
 - **Framework**: NestJS
 - **Database**: SQLite (TypeORM)
 - **Authentication**: JWT (JSON Web Tokens)
+- **Real-time Communication**: WebSocket (Socket.IO)
 - **Language**: TypeScript
 - **Testing**: Jest
+
+## 문서
+
+- **[WebSocket 통신 가이드](./WEBSOCKET_GUIDE.md)**: 프론트엔드에서 WebSocket을 사용하는 방법
 
 ## 프로젝트 구조
 
