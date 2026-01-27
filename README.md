@@ -14,6 +14,7 @@ Crew는 Slack과 유사한 기능을 제공하는 협업 메신저 서비스입�
 ## 문서
 
 - **[WebSocket 통신 가이드](./WEBSOCKET_GUIDE.md)**: 프론트엔드에서 WebSocket을 사용하는 방법
+- **[EC2 배포 완전 가이드](./EC2_DEPLOYMENT_GUIDE.md)**: AWS EC2 인스턴스 생성부터 배포까지 전체 과정
 - **[배포 가이드](./DEPLOYMENT.md)**: Docker 및 AWS EC2 배포 방법
 - **[면접 질문 및 답변 정리](./Study.md)**: 프로젝트 관련 면접 질문과 답변
 
