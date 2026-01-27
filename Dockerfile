@@ -29,6 +29,9 @@ RUN npm ci --only=production && npm cache clean --force
 # 빌드된 파일 복사
 COPY --from=builder /app/dist ./dist
 
+# 데이터 디렉토리 생성 (SQLite 데이터베이스용)
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 # 포트 노출
 EXPOSE 3000
 
@@ -37,8 +40,8 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # 헬스체크 추가
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health-check', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # 애플리케이션 실행
 CMD ["node", "dist/main.js"]

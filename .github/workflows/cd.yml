@@ -5,16 +5,19 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    branches: [ main ]
+    branches: [ main, feature/CI-CD ]
+  push:
+    branches: [ main, feature/CI-CD ]
   workflow_dispatch: # 수동 실행도 가능
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
-    # CI 워크플로우가 성공적으로 완료된 경우 또는 수동 실행인 경우 실행
+    # CI 워크플로우가 성공적으로 완료된 경우, push 이벤트인 경우, 또는 수동 실행인 경우 실행
     if: |
       github.event_name == 'workflow_dispatch' || 
+      github.event_name == 'push' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     
     steps:
@@ -58,6 +61,16 @@ jobs:
 
       # EC2 자동 배포 (선택사항 - Secrets 설정 필요)
       # EC2_HOST, EC2_USER, EC2_SSH_KEY, EC2_DEPLOY_PATH Secrets가 설정되어 있어야 함
+      - name: Copy docker-compose.yml to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: ${{ secrets.EC2_DEPLOY_PATH || '/home/ubuntu/crew' }}
+        continue-on-error: true
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -65,9 +78,20 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ${{ secrets.EC2_DEPLOY_PATH || '/home/ubuntu/crew' }}
+            DEPLOY_PATH="${{ secrets.EC2_DEPLOY_PATH || '/home/ubuntu/crew' }}"
+            cd ${DEPLOY_PATH}
+            
+            # data 디렉토리 생성 및 권한 설정
+            mkdir -p data
+            chmod 777 data || sudo chmod 777 data
+            
+            # 최신 이미지 pull (항상 latest 사용)
             docker pull ${{ secrets.DOCKER_USERNAME }}/crew:latest
-            docker-compose down || true
-            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker-compose up -d
+            
+            # 기존 컨테이너 중지 및 새 컨테이너 시작
+            docker compose down || true
+            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker compose up -d
+            
+            # 불필요한 이미지 정리
             docker system prune -f
         continue-on-error: true  # Secrets가 없어도 워크플로우가 실패하지 않도록

@@ -17,8 +17,8 @@ import { Message } from './modules/messages/entities/message.entity';
       envFilePath: '.env',
     }),
     TypeOrmModule.forRoot({
-      type: 'sqlite', // 또는 'sqlite'
-      database: 'crew.db', // 프로젝트 루트에 생성될 DB 파일
+      type: 'sqlite',
+      database: process.env.DATABASE_PATH || 'data/crew.db', // 데이터베이스 파일 경로
       entities: [User, Channel, Message],
       synchronize: true, // 개발 환경에서만 true
       logging: true,
