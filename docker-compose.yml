@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  crew:
+    image: ${DOCKER_USERNAME:-your-username}/crew:latest
+    container_name: crew-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./crew.db:/app/crew.db  # 데이터베이스 파일 영구 저장
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
