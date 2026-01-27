@@ -5,7 +5,7 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    branches: [ main ]
+    branches: [ main, feature/CI-CD ]
   workflow_dispatch: # 수동 실행도 가능
 
 jobs:
@@ -67,7 +67,7 @@ jobs:
           script: |
             cd ${{ secrets.EC2_DEPLOY_PATH || '/home/ubuntu/crew' }}
             docker pull ${{ secrets.DOCKER_USERNAME }}/crew:latest
-            docker-compose down || true
-            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker-compose up -d
+            docker compose down || true
+            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker compose up -d
             docker system prune -f
         continue-on-error: true  # Secrets가 없어도 워크플로우가 실패하지 않도록
