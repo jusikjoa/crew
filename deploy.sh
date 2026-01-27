@@ -47,7 +47,7 @@ echo "✅ 이미지 다운로드 완료"
 if [ -f docker-compose.yml ]; then
     echo ""
     echo "Docker Compose를 사용하여 배포합니다..."
-    DOCKER_USERNAME=${DOCKER_USERNAME} docker-compose up -d
+    DOCKER_USERNAME=${DOCKER_USERNAME} docker compose up -d
     echo "✅ Docker Compose 배포 완료"
 else
     echo ""
