@@ -7,6 +7,8 @@ services:
       - "${PORT:-3000}:3000"
     env_file:
       - .env
+    environment:
+      - DATABASE_PATH=/app/data/crew.db  # 데이터베이스 경로 명시 (절대 경로)
     volumes:
       - ./data:/app/data  # 데이터베이스 디렉토리 마운트
     user: "0:0"  # root로 실행 (임시 해결책, 보안상 권장하지 않음)
