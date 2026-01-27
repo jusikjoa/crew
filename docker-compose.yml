@@ -1,6 +1,6 @@
 services:
   crew:
-    image: ${DOCKER_USERNAME:-your-username}/crew:${IMAGE_TAG:-latest}
+    image: ${DOCKER_USERNAME:-your-username}/crew:latest
     container_name: crew-app
     restart: unless-stopped
     ports:

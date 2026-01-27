@@ -81,30 +81,16 @@ jobs:
             DEPLOY_PATH="${{ secrets.EC2_DEPLOY_PATH || '/home/ubuntu/crew' }}"
             cd ${DEPLOY_PATH}
             
-            # 현재 브랜치 확인 (workflow_run인 경우 CI의 브랜치, 그 외는 현재 브랜치)
-            BRANCH_NAME="${{ github.event.workflow_run.head_branch || github.ref_name }}"
-            
-            # 브랜치에 따라 이미지 태그 결정
-            if [ "$BRANCH_NAME" == "main" ]; then
-              IMAGE_TAG="latest"
-            else
-              IMAGE_TAG="$BRANCH_NAME"
-            fi
-            
             # data 디렉토리 생성 및 권한 설정
             mkdir -p data
             chmod 777 data || sudo chmod 777 data
             
-            # 해당 브랜치의 이미지 pull
-            docker pull ${{ secrets.DOCKER_USERNAME }}/crew:${IMAGE_TAG}
-            
-            # docker-compose.yml에서 이미지 태그 업데이트 (선택사항)
-            # 또는 환경 변수로 전달
-            export IMAGE_TAG=${IMAGE_TAG}
+            # 최신 이미지 pull (항상 latest 사용)
+            docker pull ${{ secrets.DOCKER_USERNAME }}/crew:latest
             
             # 기존 컨테이너 중지 및 새 컨테이너 시작
             docker compose down || true
-            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} IMAGE_TAG=${IMAGE_TAG} docker compose up -d
+            DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker compose up -d
             
             # 불필요한 이미지 정리
             docker system prune -f
