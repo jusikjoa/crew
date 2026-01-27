@@ -138,5 +138,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Study materials (면접 준비 자료)
-Study.md
+# Documentation files (README.md 제외)
+*.md
+!README.md
