@@ -4,6 +4,6 @@ import { Controller, Get } from '@nestjs/common';
 export class AppController {
   @Get('health-check')
   getHello(): string {
-    return 'Slack-lite 서버가 정상적으로 동작 중입니다!-CI-CD 적용 🚀';
+    return 'Slack-lite 서버가 정상적으로 동작 중입니다!-CI-CD + CORS적용 🚀';
   }
 }
