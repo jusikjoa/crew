@@ -29,6 +29,9 @@ RUN npm ci --only=production && npm cache clean --force
 # 빌드된 파일 복사
 COPY --from=builder /app/dist ./dist
 
+# 데이터 디렉토리 생성 (SQLite 데이터베이스용)
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 # 포트 노출
 EXPOSE 3000
 
