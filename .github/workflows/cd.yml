@@ -42,6 +42,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          no-cache: true # 캐시 없이 강제로 새로 빌드
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/crew:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/crew:buildcache,mode=max
 
@@ -71,11 +72,16 @@ jobs:
             mkdir -p data
             chmod 777 data || sudo chmod 777 data
             
+            # 기존 컨테이너 중지
+            docker compose down || true
+            
+            # 기존 이미지 삭제 (강제로 새 이미지 pull하기 위해)
+            docker rmi ${{ secrets.DOCKER_USERNAME }}/crew:latest || true
+            
             # 최신 이미지 pull (항상 latest 사용)
             docker pull ${{ secrets.DOCKER_USERNAME }}/crew:latest
             
-            # 기존 컨테이너 중지 및 새 컨테이너 시작
-            docker compose down || true
+            # 새 컨테이너 시작
             DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker compose up -d
             
             # 불필요한 이미지 정리
