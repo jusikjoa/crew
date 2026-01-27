@@ -12,8 +12,10 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
-    # CI 워크플로우가 성공적으로 완료된 경우에만 실행
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # CI 워크플로우가 성공적으로 완료된 경우 또는 수동 실행인 경우 실행
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     
     steps:
       - name: Checkout code
