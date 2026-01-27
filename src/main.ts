@@ -6,6 +6,17 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: [
+      'http://localhost:3001',
+      'http://13.125.225.5:3001', // 프론트 개발 서버 주소
+      // 'https://my-frontend-domain.com', // 배포된 프론트 주소도 필요하면 추가
+    ],
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
+  });
   
   // 전역 ValidationPipe 설정
   app.useGlobalPipes(
