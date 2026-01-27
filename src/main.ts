@@ -11,12 +11,9 @@ config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // CORS 설정
+  // CORS 설정 - 모든 origin 허용 (개발 환경)
   app.enableCors({
-    origin: [
-      'http://localhost:3001',
-      'http://13.125.225.5:3001', // 프론트엔드 서버 주소
-    ],
+    origin: true, // 모든 origin 허용
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
