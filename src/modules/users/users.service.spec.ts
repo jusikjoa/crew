@@ -97,16 +97,15 @@ describe('UsersService', () => {
     });
 
     it('이미 사용 중인 표시명으로 사용자 생성 시 ConflictException을 던져야 함', async () => {
-      mockRepository.findOne
-        .mockResolvedValueOnce(null) // 이메일 중복 없음
-        .mockResolvedValueOnce(mockUser); // 표시명 중복 있음
+      mockRepository.findOne.mockImplementation(({ where }) => {
+        if (where.email) return Promise.resolve(null); // 이메일 중복 없음
+        if (where.displayName) return Promise.resolve(mockUser); // 표시명 중복 있음
+        return Promise.resolve(null);
+      });
 
-      await expect(
-        service.create('new@example.com', 'password123', 'newuser', 'Test User'),
-      ).rejects.toThrow(ConflictException);
-      await expect(
-        service.create('new@example.com', 'password123', 'newuser', 'Test User'),
-      ).rejects.toThrow('이미 사용 중인 표시명입니다.');
+      const createPromise = service.create('new@example.com', 'password123', 'newuser', 'Test User');
+      await expect(createPromise).rejects.toThrow(ConflictException);
+      await expect(createPromise).rejects.toThrow('이미 사용 중인 표시명입니다.');
 
       expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
       expect(mockRepository.save).not.toHaveBeenCalled();
@@ -263,8 +262,11 @@ describe('UsersService', () => {
       const updateData = { displayName: 'Existing Display Name' };
       const existingUserWithDisplayName = { ...mockUser, id: '2', displayName: 'Existing Display Name' };
 
-      mockRepository.findOne.mockResolvedValueOnce(mockUser); // findOne(id)
-      mockRepository.findOne.mockResolvedValueOnce(existingUserWithDisplayName); // findByDisplayName - 다른 사용자가 이미 사용 중
+      mockRepository.findOne.mockImplementation(({ where }) => {
+        if (where.id) return Promise.resolve(mockUser); // findOne(id)
+        if (where.displayName) return Promise.resolve(existingUserWithDisplayName); // findByDisplayName
+        return Promise.resolve(null);
+      });
 
       await expect(service.update('1', updateData)).rejects.toThrow(ConflictException);
       await expect(service.update('1', updateData)).rejects.toThrow('이미 사용 중인 표시명입니다.');
