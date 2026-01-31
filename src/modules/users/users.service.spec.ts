@@ -67,7 +67,7 @@ describe('UsersService', () => {
         displayName: 'Test User',
       };
 
-      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.findOne.mockResolvedValue(null); // 이메일, 표시명 중복 없음
       mockRepository.create.mockReturnValue(mockUser);
       mockRepository.save.mockResolvedValue(mockUser);
 
@@ -80,6 +80,7 @@ describe('UsersService', () => {
 
       expect(result).toEqual(mockUserResponse);
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { email: createUserDto.email } });
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { displayName: createUserDto.displayName } });
       expect(mockRepository.create).toHaveBeenCalled();
       expect(mockRepository.save).toHaveBeenCalled();
     });
@@ -92,6 +93,22 @@ describe('UsersService', () => {
       ).rejects.toThrow(ConflictException);
 
       expect(mockRepository.findOne).toHaveBeenCalled();
+      expect(mockRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('이미 사용 중인 표시명으로 사용자 생성 시 ConflictException을 던져야 함', async () => {
+      mockRepository.findOne
+        .mockResolvedValueOnce(null) // 이메일 중복 없음
+        .mockResolvedValueOnce(mockUser); // 표시명 중복 있음
+
+      await expect(
+        service.create('new@example.com', 'password123', 'newuser', 'Test User'),
+      ).rejects.toThrow(ConflictException);
+      await expect(
+        service.create('new@example.com', 'password123', 'newuser', 'Test User'),
+      ).rejects.toThrow('이미 사용 중인 표시명입니다.');
+
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(2);
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
   });
@@ -188,7 +205,8 @@ describe('UsersService', () => {
       const updatedUser = { ...mockUser, ...updateData };
       const expectedResponse = { ...mockUserResponse, ...updateData };
 
-      mockRepository.findOne.mockResolvedValue(mockUser);
+      mockRepository.findOne.mockResolvedValueOnce(mockUser); // findOne(id)
+      mockRepository.findOne.mockResolvedValueOnce(null); // findByDisplayName - 중복 없음
       mockRepository.save.mockResolvedValue(updatedUser);
 
       const result = await service.update('1', updateData);
@@ -239,6 +257,17 @@ describe('UsersService', () => {
       mockRepository.findOne.mockResolvedValueOnce(existingUser); // 중복 이메일 발견
 
       await expect(service.update('1', updateData)).rejects.toThrow(ConflictException);
+    });
+
+    it('중복된 표시명으로 변경 시 ConflictException을 던져야 함', async () => {
+      const updateData = { displayName: 'Existing Display Name' };
+      const existingUserWithDisplayName = { ...mockUser, id: '2', displayName: 'Existing Display Name' };
+
+      mockRepository.findOne.mockResolvedValueOnce(mockUser); // findOne(id)
+      mockRepository.findOne.mockResolvedValueOnce(existingUserWithDisplayName); // findByDisplayName - 다른 사용자가 이미 사용 중
+
+      await expect(service.update('1', updateData)).rejects.toThrow(ConflictException);
+      await expect(service.update('1', updateData)).rejects.toThrow('이미 사용 중인 표시명입니다.');
     });
   });
 

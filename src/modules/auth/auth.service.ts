@@ -21,12 +21,6 @@ export class AuthService {
    * @returns 생성된 사용자 정보 (비밀번호 제외)
    */
   async signup(signupDto: SignupDto): Promise<UserResponseDto> {
-    // 사용자명 중복 확인
-    const existingUserByUsername = await this.usersService.findByUsername(signupDto.username);
-    if (existingUserByUsername) {
-      throw new ConflictException('이미 사용 중인 사용자명입니다.');
-    }
-
     // 비밀번호 해싱
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(signupDto.password, saltRounds);
