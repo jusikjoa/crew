@@ -6,6 +6,8 @@
   "scripts": {
     "cleanup:displaynames": "node scripts/cleanup-duplicate-display-names.js",
     "fix:channel-name-unique": "node scripts/remove-channel-name-unique.js",
+    "generate-cert": "node scripts/generate-self-signed-cert.js",
+    "verify-https": "node scripts/verify-https.js",
     "build": "tsc",
     "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only -r reflect-metadata/Reflect src/main.ts",
@@ -57,6 +59,7 @@
     "@types/passport-jwt": "^4.0.1",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
+    "selfsigned": "^2.4.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }

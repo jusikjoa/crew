@@ -8,12 +8,17 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_PATH=/app/data/crew.db  # 데이터베이스 경로 명시 (절대 경로)
+      - DATABASE_PATH=/app/data/crew.db
+      # HTTPS 사용 시 (certs 마운트 후)
+      # - USE_HTTPS=true
+      # - SSL_KEY_PATH=/app/certs/server.key
+      # - SSL_CERT_PATH=/app/certs/server.crt
     volumes:
-      - ./data:/app/data  # 데이터베이스 디렉토리 마운트
+      - ./data:/app/data
+      # HTTPS 사용 시: - ./certs:/app/certs:ro
     user: "0:0"  # root로 실행 (임시 해결책, 보안상 권장하지 않음)
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health-check', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "node", "scripts/healthcheck.js"]
       interval: 30s
       timeout: 3s
       retries: 3

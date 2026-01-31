@@ -37,6 +37,9 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
+# SSL 인증서 (민감 정보)
+certs/
+
 # Dependency directories
 node_modules/
 jspm_packages/
