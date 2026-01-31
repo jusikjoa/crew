@@ -86,14 +86,12 @@ describe('AuthService', () => {
 
     it('회원가입에 성공해야 함', async () => {
       const hashedPassword = 'hashedPassword123';
-      mockUsersService.findByUsername.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
       mockUsersService.create.mockResolvedValue(mockUserResponse);
 
       const result = await service.signup(signupDto);
 
       expect(result).toEqual(mockUserResponse);
-      expect(usersService.findByUsername).toHaveBeenCalledWith(signupDto.username);
       expect(bcrypt.hash).toHaveBeenCalledWith(signupDto.password, 10);
       expect(usersService.create).toHaveBeenCalledWith(
         signupDto.email,
@@ -112,7 +110,6 @@ describe('AuthService', () => {
       const hashedPassword = 'hashedPassword123';
       const userWithoutDisplayName = { ...mockUserResponse, displayName: null };
 
-      mockUsersService.findByUsername.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
       mockUsersService.create.mockResolvedValue(userWithoutDisplayName);
 
@@ -127,31 +124,8 @@ describe('AuthService', () => {
       );
     });
 
-    it('이미 사용 중인 사용자명으로 회원가입 시 ConflictException을 던져야 함', async () => {
-      const existingUser = {
-        id: '2',
-        email: 'existing@example.com',
-        username: 'testuser',
-        password: 'hashed',
-        displayName: 'Existing User',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockUsersService.findByUsername.mockResolvedValue(existingUser);
-
-      await expect(service.signup(signupDto)).rejects.toThrow(ConflictException);
-      await expect(service.signup(signupDto)).rejects.toThrow('이미 사용 중인 사용자명입니다.');
-
-      expect(usersService.findByUsername).toHaveBeenCalledWith(signupDto.username);
-      expect(usersService.create).not.toHaveBeenCalled();
-      expect(bcrypt.hash).not.toHaveBeenCalled();
-    });
-
     it('이미 존재하는 이메일로 회원가입 시 ConflictException을 던져야 함', async () => {
       const hashedPassword = 'hashedPassword123';
-      mockUsersService.findByUsername.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
       mockUsersService.create.mockRejectedValue(
         new ConflictException('이미 존재하는 이메일입니다.'),
@@ -160,14 +134,12 @@ describe('AuthService', () => {
       await expect(service.signup(signupDto)).rejects.toThrow(ConflictException);
       await expect(service.signup(signupDto)).rejects.toThrow('이미 존재하는 이메일입니다.');
 
-      expect(usersService.findByUsername).toHaveBeenCalledWith(signupDto.username);
       expect(bcrypt.hash).toHaveBeenCalledWith(signupDto.password, 10);
       expect(usersService.create).toHaveBeenCalled();
     });
 
     it('비밀번호를 올바르게 해싱해야 함', async () => {
       const hashedPassword = 'hashedPassword123';
-      mockUsersService.findByUsername.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
       mockUsersService.create.mockResolvedValue(mockUserResponse);
 

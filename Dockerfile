@@ -29,6 +29,9 @@ RUN npm ci --only=production && npm cache clean --force
 # 빌드된 파일 복사
 COPY --from=builder /app/dist ./dist
 
+# DB 마이그레이션 스크립트 복사
+COPY scripts ./scripts
+
 # 데이터 디렉토리 생성 (SQLite 데이터베이스용)
 RUN mkdir -p /app/data && chmod 777 /app/data
 

@@ -25,11 +25,20 @@ export class UsersService {
       throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
+    // 표시명 중복 확인 (표시명이 있는 경우)
+    const displayNameToSave = displayName?.trim() || null;
+    if (displayNameToSave) {
+      const existingByDisplayName = await this.findByDisplayName(displayNameToSave);
+      if (existingByDisplayName) {
+        throw new ConflictException('이미 사용 중인 표시명입니다.');
+      }
+    }
+
     const user = this.usersRepository.create({
       email,
       password,
       username,
-      displayName: displayName || null,
+      displayName: displayNameToSave,
       isActive: true,
     });
 
@@ -62,6 +71,11 @@ export class UsersService {
     return await this.usersRepository.findOne({ where: { username } });
   }
 
+  // 표시명으로 조회
+  async findByDisplayName(displayName: string): Promise<User | null> {
+    return await this.usersRepository.findOne({ where: { displayName } });
+  }
+
   // 모든 사용자 조회
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.usersRepository.find();
@@ -80,6 +94,22 @@ export class UsersService {
       }
     }
 
+    // 표시명 변경 시 중복 확인
+    const newDisplayName = updateData.displayName !== undefined
+      ? (updateData.displayName?.trim() || null)
+      : undefined;
+    if (newDisplayName !== undefined && newDisplayName !== user.displayName) {
+      if (newDisplayName) {
+        const existingByDisplayName = await this.findByDisplayName(newDisplayName);
+        if (existingByDisplayName && existingByDisplayName.id !== id) {
+          throw new ConflictException('이미 사용 중인 표시명입니다.');
+        }
+      }
+    }
+
+    if (newDisplayName !== undefined) {
+      updateData = { ...updateData, displayName: newDisplayName };
+    }
     Object.assign(user, updateData);
     const updatedUser = await this.usersRepository.save(user);
     return this.excludePassword(updatedUser);
