@@ -1,11 +1,18 @@
 /**
  * SQLite channels 테이블에서 name 컬럼의 unique 제약 제거
  * SQLite는 ALTER COLUMN을 지원하지 않아 테이블을 재생성함
+ * DB/테이블이 없으면 아무 작업 없이 종료 (배포 시 안전)
  */
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
 const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '..', 'data', 'crew.db');
+
+if (!fs.existsSync(dbPath)) {
+  console.log('DB 파일이 없습니다. 마이그레이션 생략.');
+  process.exit(0);
+}
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
@@ -15,7 +22,16 @@ const db = new sqlite3.Database(dbPath, (err) => {
 });
 
 db.serialize(() => {
-  db.run('PRAGMA foreign_keys = OFF', (err) => {
+  // channels 테이블 존재 확인
+  db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='channels'", (err, row) => {
+    if (err || !row) {
+      console.log('channels 테이블이 없습니다. 마이그레이션 생략.');
+      db.close();
+      process.exit(0);
+      return;
+    }
+
+    db.run('PRAGMA foreign_keys = OFF', (err) => {
     if (err) {
       console.error('foreign_keys OFF 실패:', err.message);
       db.close();
@@ -78,7 +94,7 @@ db.serialize(() => {
             });
           });
         });
-      },
-    );
+      });
+    });
   });
 });
