@@ -103,20 +103,6 @@ describe('ChannelsController', () => {
       );
     });
 
-    it('이미 존재하는 채널명으로 생성 시 ConflictException을 던져야 함', async () => {
-      mockChannelsService.create.mockRejectedValue(
-        new ConflictException('이미 존재하는 채널 이름입니다.'),
-      );
-
-      await expect(controller.create(createChannelDto, mockCurrentUser)).rejects.toThrow(
-        ConflictException,
-      );
-      await expect(controller.create(createChannelDto, mockCurrentUser)).rejects.toThrow(
-        '이미 존재하는 채널 이름입니다.',
-      );
-
-      expect(service.create).toHaveBeenCalledWith(createChannelDto, mockCurrentUser.userId);
-    });
   });
 
   describe('findAll', () => {
@@ -237,18 +223,6 @@ describe('ChannelsController', () => {
       );
     });
 
-    it('이미 존재하는 채널명으로 업데이트 시 ConflictException을 던져야 함', async () => {
-      mockChannelsService.update.mockRejectedValue(
-        new ConflictException('이미 존재하는 채널 이름입니다.'),
-      );
-
-      await expect(controller.update(channelId, updateChannelDto, mockCurrentUser)).rejects.toThrow(
-        ConflictException,
-      );
-      await expect(controller.update(channelId, updateChannelDto, mockCurrentUser)).rejects.toThrow(
-        '이미 존재하는 채널 이름입니다.',
-      );
-    });
   });
 
   describe('remove', () => {

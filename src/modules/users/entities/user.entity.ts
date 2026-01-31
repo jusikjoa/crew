@@ -23,7 +23,7 @@ import {
     @Column()
     username: string;
   
-    @Column({ nullable: true })
+    @Column({ unique: true, nullable: true })
     displayName: string | null;
   
     @Column({ default: true })

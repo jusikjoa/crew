@@ -66,20 +66,24 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             DEPLOY_PATH="${{ secrets.EC2_DEPLOY_PATH || '/home/ubuntu/crew' }}"
+            IMAGE="${{ secrets.DOCKER_USERNAME }}/crew:latest"
             cd ${DEPLOY_PATH}
             
             # data 디렉토리 생성 및 권한 설정
             mkdir -p data
             chmod 777 data || sudo chmod 777 data
             
-            # 기존 컨테이너 중지
+            # 기존 컨테이너 중지 (DB 락 해제)
             docker compose down || true
             
             # 기존 이미지 삭제 (강제로 새 이미지 pull하기 위해)
-            docker rmi ${{ secrets.DOCKER_USERNAME }}/crew:latest || true
+            docker rmi ${IMAGE} || true
             
-            # 최신 이미지 pull (항상 latest 사용)
-            docker pull ${{ secrets.DOCKER_USERNAME }}/crew:latest
+            # 최신 이미지 pull
+            docker pull ${IMAGE}
+            
+            # DB 마이그레이션 실행 (channels.name unique 제약 제거 등)
+            docker run --rm -v ${DEPLOY_PATH}/data:/app/data -e DATABASE_PATH=/app/data/crew.db ${IMAGE} node scripts/remove-channel-name-unique.js || true
             
             # 새 컨테이너 시작
             DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker compose up -d

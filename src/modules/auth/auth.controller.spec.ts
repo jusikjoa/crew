@@ -79,17 +79,6 @@ describe('AuthController', () => {
       expect(service.signup).toHaveBeenCalledWith(signupDtoWithoutDisplayName);
     });
 
-    it('이미 사용 중인 사용자명으로 회원가입 시 ConflictException을 던져야 함', async () => {
-      mockAuthService.signup.mockRejectedValue(
-        new ConflictException('이미 사용 중인 사용자명입니다.'),
-      );
-
-      await expect(controller.signup(signupDto)).rejects.toThrow(ConflictException);
-      await expect(controller.signup(signupDto)).rejects.toThrow('이미 사용 중인 사용자명입니다.');
-
-      expect(service.signup).toHaveBeenCalledWith(signupDto);
-    });
-
     it('이미 존재하는 이메일로 회원가입 시 ConflictException을 던져야 함', async () => {
       mockAuthService.signup.mockRejectedValue(
         new ConflictException('이미 존재하는 이메일입니다.'),
