@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "cleanup:displaynames": "node scripts/cleanup-duplicate-display-names.js",
+    "fix:channel-name-unique": "node scripts/remove-channel-name-unique.js",
     "build": "tsc",
     "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only -r reflect-metadata/Reflect src/main.ts",

@@ -23,14 +23,6 @@ export class ChannelsService {
    * 채널 생성
    */
   async create(createChannelDto: CreateChannelDto, createdBy?: string): Promise<ChannelResponseDto> {
-    // 채널명 중복 확인
-    const existingChannel = await this.channelsRepository.findOne({
-      where: { name: createChannelDto.name },
-    });
-    if (existingChannel) {
-      throw new ConflictException('이미 존재하는 채널 이름입니다.');
-    }
-
     // 비밀번호가 제공된 경우 해시화
     let hashedPassword: string | null = null;
     if (createChannelDto.password) {
@@ -158,16 +150,6 @@ export class ChannelsService {
     // 권한 체크: 채널 생성자만 업데이트 가능
     if (channel.createdBy !== userId) {
       throw new ForbiddenException('채널을 수정할 권한이 없습니다.');
-    }
-
-    // 이름 변경 시 중복 확인
-    if (updateChannelDto.name && updateChannelDto.name !== channel.name) {
-      const existingChannel = await this.channelsRepository.findOne({
-        where: { name: updateChannelDto.name },
-      });
-      if (existingChannel) {
-        throw new ConflictException('이미 존재하는 채널 이름입니다.');
-      }
     }
 
     // createdBy 변경 시 처리

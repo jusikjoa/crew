@@ -91,9 +91,6 @@ describe('ChannelsService', () => {
         channels: [],
       };
 
-      mockRepository.findOne
-        .mockResolvedValueOnce(null) // 채널명 중복 확인
-        .mockResolvedValueOnce(null); // 채널 조회 (members 관계 로드용)
       mockRepository.create.mockReturnValue(mockChannel);
       mockRepository.save
         .mockResolvedValueOnce(mockChannel) // 채널 저장
@@ -103,9 +100,6 @@ describe('ChannelsService', () => {
       const result = await service.create(createChannelDto, 'user-1');
 
       expect(result).toEqual(mockChannelResponse);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({
-        where: { name: createChannelDto.name },
-      });
       expect(mockRepository.create).toHaveBeenCalled();
       expect(mockUserRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'user-1' },
@@ -118,7 +112,6 @@ describe('ChannelsService', () => {
       const channelWithoutCreator = { ...mockChannel, createdBy: null };
       const expectedResponse = { ...mockChannelResponse, createdBy: null };
 
-      mockRepository.findOne.mockResolvedValue(null);
       mockRepository.create.mockReturnValue(channelWithoutCreator);
       mockRepository.save.mockResolvedValue(channelWithoutCreator);
 
@@ -144,7 +137,6 @@ describe('ChannelsService', () => {
         channels: [],
       };
 
-      mockRepository.findOne.mockResolvedValue(null);
       mockRepository.create.mockReturnValue(channelWithoutDescription);
       mockRepository.save
         .mockResolvedValueOnce(channelWithoutDescription)
@@ -163,7 +155,6 @@ describe('ChannelsService', () => {
       };
       const channel = { ...mockChannel, isPublic: true };
 
-      mockRepository.findOne.mockResolvedValue(null);
       mockRepository.create.mockReturnValue(channel);
       mockRepository.save.mockResolvedValue(channel);
 
@@ -174,17 +165,6 @@ describe('ChannelsService', () => {
       );
     });
 
-    it('이미 존재하는 채널명으로 생성 시 ConflictException을 던져야 함', async () => {
-      mockRepository.findOne.mockResolvedValue(mockChannel);
-
-      await expect(service.create(createChannelDto, 'user-1')).rejects.toThrow(ConflictException);
-      await expect(service.create(createChannelDto, 'user-1')).rejects.toThrow(
-        '이미 존재하는 채널 이름입니다.',
-      );
-
-      expect(mockRepository.create).not.toHaveBeenCalled();
-      expect(mockRepository.save).not.toHaveBeenCalled();
-    });
   });
 
   describe('findAll', () => {
@@ -240,8 +220,7 @@ describe('ChannelsService', () => {
       const updatedChannel = { ...mockChannel, ...updateChannelDto };
       const expectedResponse = { ...mockChannelResponse, ...updateChannelDto };
 
-      mockRepository.findOne.mockResolvedValueOnce(mockChannel); // 채널 조회
-      mockRepository.findOne.mockResolvedValueOnce(null); // 이름 중복 체크
+      mockRepository.findOne.mockResolvedValue(mockChannel);
       mockRepository.save.mockResolvedValue(updatedChannel);
 
       const result = await service.update('1', updateChannelDto, 'user-1');
@@ -306,24 +285,7 @@ describe('ChannelsService', () => {
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
 
-    it('이름 변경 시 중복 확인을 해야 함', async () => {
-      const nameUpdateDto: UpdateChannelDto = {
-        name: 'new-name',
-      };
-      const existingChannelWithNewName = { ...mockChannel, id: '2', name: 'new-name' };
-
-      mockRepository.findOne.mockResolvedValueOnce(mockChannel); // 채널 조회
-      mockRepository.findOne.mockResolvedValueOnce(existingChannelWithNewName); // 중복 이름 발견
-
-      await expect(service.update('1', nameUpdateDto, 'user-1')).rejects.toThrow(
-        ConflictException,
-      );
-      await expect(service.update('1', nameUpdateDto, 'user-1')).rejects.toThrow(
-        '이미 존재하는 채널 이름입니다.',
-      );
-    });
-
-    it('같은 이름으로 변경 시 중복 체크를 하지 않아야 함', async () => {
+    it('이름 변경이 정상적으로 적용되어야 함', async () => {
       const originalChannel = {
         id: '1',
         name: 'general',
@@ -344,9 +306,7 @@ describe('ChannelsService', () => {
 
       const result = await service.update('1', sameNameUpdateDto, 'user-1');
 
-      // 채널 조회만 호출되고, 이름 중복 체크(findOne)는 호출되지 않음
-      // (이름이 같으면 중복 체크 로직을 건너뛰기 때문)
-      expect(mockRepository.findOne).toHaveBeenCalledTimes(1); // 채널 조회만
+      expect(mockRepository.findOne).toHaveBeenCalledTimes(1);
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result.description).toBe('업데이트된 설명');
       expect(result.name).toBe('general'); // 이름은 변경되지 않음
