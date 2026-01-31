@@ -57,6 +57,7 @@
     "@types/passport-jwt": "^4.0.1",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
+    "selfsigned": "^2.4.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }
